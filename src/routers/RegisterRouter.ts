@@ -15,7 +15,7 @@ class RegisterRouter {
 
     private configure() {
         this._router.get('/', (req: Request, res: Response, next: NextFunction) => {
-            res.status(200).json(this._controller.signup(req))
+            this._controller.signup(req, res);
         })
     }
 }

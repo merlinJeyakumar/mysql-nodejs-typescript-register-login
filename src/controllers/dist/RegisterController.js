@@ -1,8 +1,9 @@
 "use strict";
+var DatabaseJob_1 = require("../job/DatabaseJob");
 var RegisterController = /** @class */ (function () {
     function RegisterController() {
     }
-    RegisterController.prototype.signup = function (req) {
+    RegisterController.prototype.signup = function (req, res) {
         var mobileNumber = req.query.mobileNumber;
         var firstName = req.query.firstName;
         var lastName = req.query.lastName;
@@ -16,7 +17,21 @@ var RegisterController = /** @class */ (function () {
         if (password == null || firstName.length < 5) {
             return { text: "password should be valid, minimum 5 characters" };
         }
-        //todo: 
+        var query = "INSERT INTO harshi.Users (firstName, lastName, password, mobileNumber) VALUES (\"" + firstName + "\",\"" + lastName + "\",\"" + password + "\",\"" + mobileNumber + "\"";
+        DatabaseJob_1.Connect().then(function (connection) {
+            DatabaseJob_1.Query(connection, query).then(function (result) {
+                return res.status(200).json({
+                    result: result
+                });
+            })["catch"](function (error) {
+                return res.status(200).json({
+                    message: error.message,
+                    error: error
+                });
+            })["finally"](function () {
+                connection.end();
+            });
+        });
     };
     return RegisterController;
 }());

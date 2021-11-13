@@ -17,7 +17,7 @@ var RegisterRouter = /** @class */ (function () {
     RegisterRouter.prototype.configure = function () {
         var _this = this;
         this._router.get('/', function (req, res, next) {
-            res.status(200).json(_this._controller.signup(req));
+            _this._controller.signup(req, res);
         });
     };
     return RegisterRouter;
