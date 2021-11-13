@@ -1,14 +1,6 @@
 import mysql from "mysql"
 import params from "../config/dbconfig";
 
-
-// const params = {
-//     user: 'admin',
-//     password: 'password',
-//     host: 'localhost',
-//     database: 'harshi'
-// };
-
 const Connect = async () =>
     new Promise<mysql.Connection>((resolve, reject) => {
         const connection = mysql.createConnection(params)

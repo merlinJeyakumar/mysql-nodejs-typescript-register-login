@@ -21,7 +21,10 @@ class RegisterController {
             return { text: "password should be valid, minimum 5 characters" };
         }
 
-        let query = `INSERT INTO harshi.Users (firstName, lastName, password, mobileNumber) VALUES (\"${firstName}\",\"${lastName}\",\"${password}\",\"${mobileNumber}\"`;
+        let query = "INSERT INTO Users (firstName, lastName, password, mobileNumber)" +
+            `VALUES ('${firstName}','${lastName}','${password}','${mobileNumber}')` +
+            "ON DUPLICATE KEY " +
+            `UPDATE firstName='${firstName}', lastName='${lastName}', password='${password}'`
 
         Connect().then((connection) => {
             Query(connection, query).then((result) => {

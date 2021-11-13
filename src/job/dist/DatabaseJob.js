@@ -39,12 +39,6 @@ exports.__esModule = true;
 exports.Query = exports.Connect = void 0;
 var mysql_1 = require("mysql");
 var dbconfig_1 = require("../config/dbconfig");
-// const params = {
-//     user: 'admin',
-//     password: 'password',
-//     host: 'localhost',
-//     database: 'harshi'
-// };
 var Connect = function () { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) {

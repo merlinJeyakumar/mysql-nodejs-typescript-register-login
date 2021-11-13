@@ -17,7 +17,10 @@ var RegisterController = /** @class */ (function () {
         if (password == null || firstName.length < 5) {
             return { text: "password should be valid, minimum 5 characters" };
         }
-        var query = "INSERT INTO harshi.Users (firstName, lastName, password, mobileNumber) VALUES (\"" + firstName + "\",\"" + lastName + "\",\"" + password + "\",\"" + mobileNumber + "\"";
+        var query = "INSERT INTO Users (firstName, lastName, password, mobileNumber)" +
+            ("VALUES ('" + firstName + "','" + lastName + "','" + password + "','" + mobileNumber + "')") +
+            "ON DUPLICATE KEY " +
+            ("UPDATE firstName='" + firstName + "', lastName='" + lastName + "', password='" + password + "'");
         DatabaseJob_1.Connect().then(function (connection) {
             DatabaseJob_1.Query(connection, query).then(function (result) {
                 return res.status(200).json({
