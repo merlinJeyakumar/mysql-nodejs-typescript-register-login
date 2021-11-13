@@ -1,0 +1,23 @@
+import { Router, Request, Response, NextFunction } from "express";
+import RegisterController from "../controllers/RegisterController";
+
+class RegisterRouter {
+    private _router = Router();
+    private _controller = RegisterController;
+
+    get router() {
+        return this._router;
+    }
+
+    constructor() {
+        this.configure();
+    }
+
+    private configure() {
+        this._router.get('/', (req: Request, res: Response, next: NextFunction) => {
+            res.status(200).json(this._controller.signup(req))
+        })
+    }
+}
+
+export = new RegisterRouter().router;

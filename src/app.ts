@@ -1,10 +1,7 @@
-import dotenv from 'dotenv'
 import express from 'express'
 import MasterRouter from './routers/MasterRouter';
+import configuration from './config/configuration'
 
-dotenv.config({
-    path: '.env'
-});
 
 class Server {
     public app = express();
@@ -14,7 +11,7 @@ class Server {
 const server = new Server();
 server.app.use('/api', server.router);
 
-((port = process.env.APP_PORT || 5000) => {
+((port = configuration.server.port) => {
     server.app.listen(port, () => {
         console.log(`listening http://localhost:${port}/api/`)
     })

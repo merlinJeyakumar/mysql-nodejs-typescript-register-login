@@ -8,8 +8,9 @@ var LoginController = /** @class */ (function () {
     LoginController.prototype.login = function (req) {
         var id = req.query.id;
         var password = req.query.password;
+        console.log("> login request");
         if (id == null) {
-            return { text: "invalid login id" };
+            return { text: "invalid login id spec" };
         }
         if (password == null) {
             return { text: "invalid login password" };

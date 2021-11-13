@@ -1,9 +1,14 @@
 {
     "compile-hero.disable-compile-files-on-did-save-code": false,
     "files.exclude": {
-    "**/.git": true,
-    "**/.DS_Store": true,
-    "**/*.js": true,
-    "**/*.js.map": true
-  }
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/node_modules":true,
+        "**/.idea":true,
+        "package-lock.json":true
+    }
 }

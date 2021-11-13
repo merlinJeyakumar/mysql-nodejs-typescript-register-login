@@ -8,6 +8,7 @@ class LoginController {
     login(req: Request) {
         let id: String = req.query.id as String
         let password: String = req.query.password as String
+        console.log("> login request")
 
         if (id == null) {
             return { text: "invalid login id" };
