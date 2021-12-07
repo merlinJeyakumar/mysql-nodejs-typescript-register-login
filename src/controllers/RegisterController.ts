@@ -1,81 +1,56 @@
-import { Request, Response } from 'express';
-import { Connect, Query } from '../job/DatabaseJob'
+import {Request, Response} from 'express';
+import {Connect, Query, ResultModel} from '../job/DatabaseJob'
+import {BaseResponseModel} from "../model/BaseResponseModel";
+import {UserModel} from "../model/UserModel";
 
 
 class RegisterController {
     signup(req: Request, response: Response) {
-        let mobileNumber = req.query.mobileNumber as String;
+        let userName = req.query.userName as String;
         let firstName = req.query.firstName as String;
         let lastName = req.query.lastName as String;
         let password = req.query.password as String;
 
-        if (mobileNumber == null) {
-            return { text: "Mobile number required" };
+        if (userName == null) {
+            return {text: "User name required"};
         }
 
         if (firstName == null || firstName.length < 3) {
-            return { text: "please enter valid first name" };
+            return {text: "please enter valid first name"};
         }
 
         if (password == null || firstName.length < 5) {
-            return { text: "password should be valid, minimum 5 characters" };
+            return {text: "password should be valid, minimum 5 characters"};
         }
-
-        let query = "INSERT INTO Users (firstName, lastName, password, mobileNumber)" +
-            `VALUES ('${firstName}','${lastName}','${password}','${mobileNumber}')` +
-            "ON DUPLICATE KEY " +
-            `UPDATE firstName='${firstName}', lastName='${lastName}', password='${password}'`
-
+        response.status(200);
         Connect().then((connection) => {
-            let existingCheckWrappe = new Promise<boolean>((resolve, reject) => {
-                let query = `SELECT EXISTS(SELECT 1 FROM Users WHERE mobileNumber="${mobileNumber}" LIMIT 1)`
-                Query(connection, query).then((array: any) => {
-                    let result = array[0];
-                    let row = array[1];
-                    const valueExist: boolean = Object.entries(row[0])[0][1] == 1
-                    console.log("valueExist: ", valueExist);
-                    resolve(valueExist) //when no user existed
-                }).catch((error) => {
-                    reject(error.message);
-                    console.log(error.message);
-                    connection.end();
-                })
-            });
-
-            Promise.allSettled([existingCheckWrappe]).then((value) => {
-                let allValues = value.filter(c => c.status === 'fulfilled')
-                    .map(c => <PromiseFulfilledResult<any>>c)
-                    .map(c => c.value)[0];
-
-                console.log("JK", allValues);
-
-                if (allValues) {
-                    response.status(200).json({
-                        message: "email already exists"
-                    });
-                    connection.end();
-                    return;
-                }
-
-                let query = "INSERT INTO Users (firstName, lastName, password, mobileNumber)" +
-                    `VALUES ('${firstName}','${lastName}','${password}','${mobileNumber}')` +
+            let promiseUserExistenceQuery = new Promise<UserModel>(async (resolve, reject) => {
+                let existenceQuery = `SELECT EXISTS(SELECT * FROM Users WHERE userName="${userName}" LIMIT 1) AS value;`
+                let insertQuery = "INSERT INTO Users (firstName, lastName, password, userName)" +
+                    `VALUES ('${firstName}','${lastName}','${password}','${userName}')` +
                     "ON DUPLICATE KEY " +
                     `UPDATE firstName='${firstName}', lastName='${lastName}', password='${password}'`;
+                const userQuery = `SELECT * FROM Users WHERE userName = "${userName}" AND password = "${password}"`
 
-                Query(connection, query).then((result) => {
-                    response.status(200).json({
-                        firstName: firstName,
-                        lastName: lastName,
-                        mobileNumber: mobileNumber
-                    });
-                }).catch((error) => {
-                    response.status(200).json({
-                        message: error.message,
-                        error
-                    });
-                }).finally(() => {
-                    connection.end();
-                });
+                let promiseExistence: any = await Query(connection, existenceQuery)
+
+                if ((<ResultModel>promiseExistence).result[0].value == 1) {
+                    reject("account already exist")
+                    return
+                }
+                await Query(connection, insertQuery);
+                resolve(await Query(connection, userQuery).then((res) => {
+                    let res_ :ResultModel  = (<ResultModel>res)
+                    return new UserModel((<ResultModel>res_).result[0]);
+                }))
+            }).then((userModel) => {
+                let baseResponseModel = new BaseResponseModel("success", 1,200, userModel.getJson())
+                response.json(baseResponseModel.getJson())
+            }).catch(reason => {
+                console.log(reason);
+                response.json(new BaseResponseModel(reason, 0,200, null).getJson())
+            }).finally(() => {
+                connection.end();
             })
         })
     }

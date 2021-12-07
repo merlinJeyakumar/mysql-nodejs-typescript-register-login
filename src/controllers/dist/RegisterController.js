@@ -43,7 +43,7 @@ var RegisterController = /** @class */ (function () {
                 console.log("JK", allValues);
                 if (allValues) {
                     response.status(200).json({
-                        message: "email already exists"
+                        message: "mobile number already exists"
                     });
                     connection.end();
                     return;

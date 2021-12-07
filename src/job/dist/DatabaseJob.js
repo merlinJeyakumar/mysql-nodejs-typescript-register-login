@@ -57,12 +57,12 @@ exports.Connect = Connect;
 var Query = function (connection, query) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
         return [2 /*return*/, new Promise(function (resolve, reject) {
-                connection.query(query, connection, function (error, row, result) {
+                connection.query(query, connection, function (error, result, fields) {
                     if (error) {
                         reject(error);
                         return;
                     }
-                    resolve([result, row, error]);
+                    resolve([fields, result, error]);
                 });
             })];
     });
