@@ -14,8 +14,8 @@ class LoginRouter {
     }
 
     private _configure() {
-        this._router.all('/', (req: Request, res: Response, next: NextFunction) => {
-            res.status(200).json(this._controller.login(req));
+        this._router.post('/', (req: Request, res: Response, next: NextFunction) => {
+            this._controller.login(req,res)
         })
     };
 }
