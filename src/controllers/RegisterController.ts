@@ -2,6 +2,7 @@ import {Request, Response} from 'express';
 import {Connect, Query, ResultModel} from '../job/DatabaseJob'
 import {BaseResponseModel} from "../model/BaseResponseModel";
 import {UserModel} from "../model/UserModel";
+import jwt from "jsonwebtoken";
 
 
 class RegisterController {
@@ -44,8 +45,16 @@ class RegisterController {
                     return new UserModel((<ResultModel>res_).result[0]);
                 }))
             }).then((userModel) => {
+                const token = jwt.sign({
+                        username: "userName",
+                        userId: "my_id"
+                    },
+                    'SECRETKEY', {
+                        expiresIn: '1m'
+                    }
+                );
                 let baseResponseModel = new BaseResponseModel("success", 1,200, userModel.getJson())
-                response.json(baseResponseModel.getJson())
+                response.json(token)
             }).catch(reason => {
                 console.log(reason);
                 response.json(new BaseResponseModel(reason, 0,200, null).getJson())

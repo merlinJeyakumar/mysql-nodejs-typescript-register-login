@@ -2,6 +2,7 @@ import {Request, Response} from "express";
 import {Connect, Query, ResultModel} from "../job/DatabaseJob";
 import {BaseResponseModel} from "../model/BaseResponseModel";
 import {UserModel} from "../model/UserModel";
+import jwt from "jsonwebtoken";
 
 
 class LoginController {
@@ -36,6 +37,11 @@ class LoginController {
                     reject("invalid credential");
                 }
             }).then((userModel) => {
+                const token = (<String>req.headers.authorization).split(' ')[1];
+                const decoded = jwt.verify(
+                    token,
+                    'SECRETKEY'
+                );
                 response.json(new BaseResponseModel("success", 1, 200, userModel.getJson()))
             }).catch(reason => {
                 console.log(reason);
