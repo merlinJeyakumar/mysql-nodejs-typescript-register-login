@@ -1,8 +1,8 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserModel = void 0;
-var UserModel = /** @class */ (function () {
-    function UserModel(result) {
+class UserModel {
+    constructor(result) {
         this.id = 0;
         this.status = 0;
         this.userName = "";
@@ -16,6 +16,8 @@ var UserModel = /** @class */ (function () {
         this.mobileNumber = result.mobileNumber;
         this.userName = result.userName;
     }
-    return UserModel;
-}());
+    getJson() {
+        return JSON.parse(JSON.stringify(this));
+    }
+}
 exports.UserModel = UserModel;

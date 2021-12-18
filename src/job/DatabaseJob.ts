@@ -1,6 +1,5 @@
 import mysql, {FieldInfo} from "mysql"
-import RowDataPacket from 'mysql';
-import params from "../config/dbconfig";
+import params from "../config/DbConfiguration";
 
 const Connect = async () =>
     new Promise<mysql.Connection>((resolve, reject) => {

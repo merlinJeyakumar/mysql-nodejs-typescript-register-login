@@ -45,16 +45,16 @@ class RegisterController {
                     return new UserModel((<ResultModel>res_).result[0]);
                 }))
             }).then((userModel) => {
-                const token = jwt.sign({
-                        username: "userName",
-                        userId: "my_id"
-                    },
-                    'SECRETKEY', {
-                        expiresIn: '1m'
-                    }
-                );
+                // const token = jwt.sign({
+                //         username: "userName",
+                //         userId: "my_id"
+                //     },
+                //     'SECRETKEY', {
+                //         expiresIn: '1m'
+                //     }
+                // );
                 let baseResponseModel = new BaseResponseModel("success", 1,200, userModel.getJson())
-                response.json(token)
+                response.json(baseResponseModel.getJson())
             }).catch(reason => {
                 console.log(reason);
                 response.json(new BaseResponseModel(reason, 0,200, null).getJson())

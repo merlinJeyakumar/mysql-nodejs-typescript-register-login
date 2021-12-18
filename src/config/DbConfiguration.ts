@@ -1,4 +1,4 @@
-import config from "./configuration";
+import config from "./Configuration";
 
 const params = {
     user: config.mysql.user,

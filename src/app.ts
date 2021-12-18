@@ -1,6 +1,6 @@
 import express from 'express'
 import MasterRouter from './routers/MasterRouter';
-import configuration from './config/configuration'
+import configuration from './config/Configuration'
 
 
 class Server {
