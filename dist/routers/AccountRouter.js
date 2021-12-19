@@ -14,8 +14,17 @@ class AccountRouter {
         return this._router;
     }
     configure() {
-        this._router.post('/', (req, res, next) => {
+        this._router.post('/addPost', (req, res, next) => {
             this._controller.withdraw(req, res);
+        });
+        this._router.post('/removePost', (req, res, next) => {
+            //this._controller.withdraw(req, res);
+        });
+        this._router.post('/getPost', (req, res, next) => {
+            //this._controller.withdraw(req, res);
+        });
+        this._router.post('/getPostList', (req, res, next) => {
+            //this._controller.withdraw(req, res);
         });
     }
 }

@@ -21,6 +21,7 @@ class MasterRouter {
         this._router.use('/login', this._loginRouter);
         this._router.use('/register', this._registerRouter);
         this._router.use('/account', this._accountRouter);
+        this._router.use('node', this._accountRouter);
     }
 }
 module.exports = new MasterRouter().router;

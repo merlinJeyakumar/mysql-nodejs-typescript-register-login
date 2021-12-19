@@ -1,3 +1,4 @@
+/*
 import {Request, Response} from 'express';
 import {Connect, Query, ResultModel} from '../job/DatabaseJob'
 import {BaseResponseModel} from "../model/BaseResponseModel";
@@ -25,7 +26,7 @@ class RegisterController {
         }
         response.status(200);
         Connect().then((connection) => {
-            let promiseUserExistenceQuery = new Promise<UserModel>(async (resolve, reject) => {
+            new Promise<UserModel>(async (resolve, reject) => {
                 let existenceQuery = `SELECT EXISTS(SELECT * FROM Users WHERE userName="${userName}" LIMIT 1) AS value;`
                 let insertQuery = "INSERT INTO Users (firstName, lastName, password, userName)" +
                     `VALUES ('${firstName}','${lastName}','${password}','${userName}')` +
@@ -45,19 +46,19 @@ class RegisterController {
                     return new UserModel((<ResultModel>res_).result[0]);
                 }))
             }).then((userModel) => {
-                // const token = jwt.sign({
-                //         username: "userName",
-                //         userId: "my_id"
-                //     },
-                //     'SECRETKEY', {
-                //         expiresIn: '1m'
-                //     }
-                // );
-                let baseResponseModel = new BaseResponseModel("success", 1,200, userModel.getJson())
+                const token = jwt.sign({
+                        username: "userName",
+                        userId: "my_id"
+                    },
+                    'SECRETKEY', {
+                        expiresIn: '1m'
+                    }
+                );
+                let baseResponseModel = new BaseResponseModel("success", 1, userModel.getJson())
                 response.json(baseResponseModel.getJson())
             }).catch(reason => {
                 console.log(reason);
-                response.json(new BaseResponseModel(reason, 0,200, null).getJson())
+                response.json(new BaseResponseModel(reason, 0, null).getJson())
             }).finally(() => {
                 connection.end();
             })
@@ -65,4 +66,4 @@ class RegisterController {
     }
 }
 
-export = new RegisterController();
+export = new RegisterController();*/

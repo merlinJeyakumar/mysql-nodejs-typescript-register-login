@@ -43,10 +43,10 @@ class LoginController {
             })).then((userModel) => {
                 const token = req.headers.authorization.split(' ')[1];
                 const decoded = jsonwebtoken_1.default.verify(token, 'SECRETKEY');
-                response.json(new BaseResponseModel_1.BaseResponseModel("success", 1, 200, userModel.getJson()));
+                response.json(new BaseResponseModel_1.BaseResponseModel("success", 1, userModel.getJson()));
             }).catch(reason => {
                 console.log(reason);
-                response.json(new BaseResponseModel_1.BaseResponseModel(reason, 0, 200, null).getJson());
+                response.json(new BaseResponseModel_1.BaseResponseModel(reason, 0, null).getJson());
             }).finally(() => {
                 connection.end();
             });

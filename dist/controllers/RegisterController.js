@@ -8,9 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 const DatabaseJob_1 = require("../job/DatabaseJob");
 const BaseResponseModel_1 = require("../model/BaseResponseModel");
 const UserModel_1 = require("../model/UserModel");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 class RegisterController {
     signup(req, response) {
         let userName = req.query.userName;
@@ -28,7 +32,7 @@ class RegisterController {
         }
         response.status(200);
         (0, DatabaseJob_1.Connect)().then((connection) => {
-            let promiseUserExistenceQuery = new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+            new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                 let existenceQuery = `SELECT EXISTS(SELECT * FROM Users WHERE userName="${userName}" LIMIT 1) AS value;`;
                 let insertQuery = "INSERT INTO Users (firstName, lastName, password, userName)" +
                     `VALUES ('${firstName}','${lastName}','${password}','${userName}')` +
@@ -46,19 +50,17 @@ class RegisterController {
                     return new UserModel_1.UserModel(res_.result[0]);
                 }));
             })).then((userModel) => {
-                // const token = jwt.sign({
-                //         username: "userName",
-                //         userId: "my_id"
-                //     },
-                //     'SECRETKEY', {
-                //         expiresIn: '1m'
-                //     }
-                // );
-                let baseResponseModel = new BaseResponseModel_1.BaseResponseModel("success", 1, 200, userModel.getJson());
+                const token = jsonwebtoken_1.default.sign({
+                    username: "userName",
+                    userId: "my_id"
+                }, 'SECRETKEY', {
+                    expiresIn: '1m'
+                });
+                let baseResponseModel = new BaseResponseModel_1.BaseResponseModel("success", 1, userModel.getJson());
                 response.json(baseResponseModel.getJson());
             }).catch(reason => {
                 console.log(reason);
-                response.json(new BaseResponseModel_1.BaseResponseModel(reason, 0, 200, null).getJson());
+                response.json(new BaseResponseModel_1.BaseResponseModel(reason, 0, null).getJson());
             }).finally(() => {
                 connection.end();
             });

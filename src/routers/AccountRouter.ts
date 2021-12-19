@@ -14,8 +14,11 @@ class AccountRouter {
     }
 
     private configure() {
-        this._router.post('/', (req: Request, res: Response, next: NextFunction) => {
-            this._controller.withdraw(req, res);
+        this._router.post('/login', (req: Request, res: Response, next: NextFunction) => {
+            this._controller.login(req, res);
+        })
+        this._router.post('/register', (req: Request, res: Response, next: NextFunction) => {
+            this._controller.register(req, res);
         })
     }
 }
