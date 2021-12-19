@@ -15,7 +15,7 @@ class PostRouter {
 
     private configure() {
         this._router.post('/addPost', (req: Request, res: Response, next: NextFunction) => {
-            //this._controller.withdraw(req, res);
+            this._controller.addPost(req, res);
         })
         this._router.post('/removePost', (req: Request, res: Response, next: NextFunction) => {
             //this._controller.withdraw(req, res);

@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import config from "../config/Configuration";
 import {sign, verify} from "../job/JwtJob";
 import {UserModel} from "../domain/model/UserModel";
+import {AuthenticationModel} from "../domain/model/AuthenticationModel";
 
 
 class AccountController {
@@ -93,7 +94,7 @@ class AccountController {
                 }))
             }).then((userModel) => {
                 let token = sign(userModel)
-                let baseResponseModel = new BaseResponseModel("success", 1, userModel.getJson())
+                let baseResponseModel = new BaseResponseModel("success", 1, new AuthenticationModel(token,userModel).getJson())
                 response.json(baseResponseModel.getJson())
             }).catch(reason => {
                 console.log(reason);
