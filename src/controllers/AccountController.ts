@@ -110,6 +110,10 @@ class AccountController {
             })
         })
     }
+
+    logout(req: Request, response: Response) {
+
+    }
 }
 
 export = new AccountController()

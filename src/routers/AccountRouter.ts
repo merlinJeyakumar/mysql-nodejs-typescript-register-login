@@ -20,6 +20,9 @@ class AccountRouter {
         this._router.post('/register', (req: Request, res: Response, next: NextFunction) => {
             this._controller.register(req, res);
         })
+        this._router.post('/logout', (req: Request, res: Response, next: NextFunction) => {
+            this._controller.register(req, res);
+        })
     }
 }
 
