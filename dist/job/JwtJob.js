@@ -22,10 +22,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verify = void 0;
+exports.sign = exports.verify = void 0;
 const jsonwebtoken_1 = __importStar(require("jsonwebtoken"));
 const Configuration_1 = __importDefault(require("../config/Configuration"));
-const BaseResponseModel_1 = require("../model/BaseResponseModel");
+const BaseResponseModel_1 = require("../domain/model/BaseResponseModel");
 const verify = function (req, response, jwtCallback) {
     try {
         const token = req.headers.authorization.split(' ')[1];
@@ -43,3 +43,12 @@ const verify = function (req, response, jwtCallback) {
     }
 };
 exports.verify = verify;
+const sign = function (userModel) {
+    return jsonwebtoken_1.default.sign({
+        username: userModel.userName,
+        userId: userModel.id
+    }, Configuration_1.default.server.secretKey, {
+        expiresIn: '1m'
+    });
+};
+exports.sign = sign;

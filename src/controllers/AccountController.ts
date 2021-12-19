@@ -1,10 +1,10 @@
 import {Request, Response} from "express";
 import {Connect, Query, ResultModel} from "../job/DatabaseJob";
-import {BaseResponseModel} from "../model/BaseResponseModel";
+import {BaseResponseModel} from "../domain/model/BaseResponseModel";
 import jwt from "jsonwebtoken";
 import config from "../config/Configuration";
-import {verify} from "../job/JwtJob";
-import {UserModel} from "../model/UserModel";
+import {sign, verify} from "../job/JwtJob";
+import {UserModel} from "../domain/model/UserModel";
 
 
 class AccountController {
@@ -92,14 +92,7 @@ class AccountController {
                     return new UserModel((<ResultModel>res_).result[0]);
                 }))
             }).then((userModel) => {
-                const token = jwt.sign({
-                        username: "userName",
-                        userId: "my_id"
-                    },
-                    'SECRETKEY', {
-                        expiresIn: '1m'
-                    }
-                );
+                let token = sign(userModel)
                 let baseResponseModel = new BaseResponseModel("success", 1, userModel.getJson())
                 response.json(baseResponseModel.getJson())
             }).catch(reason => {

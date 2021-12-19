@@ -1,4 +1,4 @@
-import {BaseResponseModel} from "../model/BaseResponseModel";
+import {BaseResponseModel} from "../domain/model/BaseResponseModel";
 import config from "../config/Configuration";
 import {verify} from "../job/JwtJob";
 

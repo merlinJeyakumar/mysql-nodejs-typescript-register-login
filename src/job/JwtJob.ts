@@ -1,8 +1,9 @@
 import jwt, {JsonWebTokenError} from "jsonwebtoken";
 import config from "../config/Configuration";
-import {BaseResponseModel} from "../model/BaseResponseModel";
+import {BaseResponseModel} from "../domain/model/BaseResponseModel";
 import {JwtCallback} from "../domain/callback/JwtCallback";
 import {Request, Response} from "express";
+import {UserModel} from "../domain/model/UserModel";
 
 const verify = function (req: Request, response: Response, jwtCallback: JwtCallback) {
     try {
@@ -23,4 +24,15 @@ const verify = function (req: Request, response: Response, jwtCallback: JwtCallb
     }
 }
 
-export {verify}
+const sign = function (userModel: UserModel): string {
+    return jwt.sign({
+            username: userModel.userName,
+            userId: userModel.id
+        },
+        (<string>config.server.secretKey), {
+            expiresIn: '1m'
+        }
+    );
+}
+
+export {verify, sign}

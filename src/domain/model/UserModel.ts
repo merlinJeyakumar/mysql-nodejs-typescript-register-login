@@ -1,5 +1,3 @@
-import {BaseResponseModel} from "./BaseResponseModel";
-
 export class UserModel {
     id: number = 0;
     status: number = 0;
@@ -17,7 +15,7 @@ export class UserModel {
         this.userName = result.userName;
     }
 
-    getJson(){
+    getJson() {
         return JSON.parse(JSON.stringify(this))
     }
 }
