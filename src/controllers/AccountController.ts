@@ -6,6 +6,9 @@ import config from "../config/Configuration";
 import {sign, verify} from "../job/JwtJob";
 import {UserModel} from "../domain/model/UserModel";
 import {AuthenticationModel} from "../domain/model/AuthenticationModel";
+import redis = require("redis");
+
+const redisClient = redis.createClient;
 
 
 class AccountController {
@@ -89,12 +92,12 @@ class AccountController {
                 }
                 await Query(connection, insertQuery);
                 resolve(await Query(connection, userQuery).then((res) => {
-                    let res_ :ResultModel  = (<ResultModel>res)
+                    let res_: ResultModel = (<ResultModel>res)
                     return new UserModel((<ResultModel>res_).result[0]);
                 }))
             }).then((userModel) => {
                 let token = sign(userModel)
-                let baseResponseModel = new BaseResponseModel("success", 1, new AuthenticationModel(token,userModel).getJson())
+                let baseResponseModel = new BaseResponseModel("success", 1, new AuthenticationModel(token, userModel).getJson())
                 response.json(baseResponseModel.getJson())
             }).catch(reason => {
                 console.log(reason);
@@ -106,7 +109,7 @@ class AccountController {
     }
 
     logout(req: Request, response: Response) {
-
+        let redis  = redisClient()
     }
 }
 
