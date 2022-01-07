@@ -1,4 +1,4 @@
-import { Router } from "express";
+import {Router} from "express";
 import AccountRouter from "./AccountRouter";
 import PostRouter from "./PostRouter";
 

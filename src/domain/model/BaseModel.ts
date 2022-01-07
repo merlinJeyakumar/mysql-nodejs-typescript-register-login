@@ -1,9 +1,9 @@
 export class BaseModel {
-    constructor(result: any){
+    constructor(result: any) {
         this.update(result)
     }
 
-    protected update(result:any){
+    protected update(result: any) {
 
     }
 }

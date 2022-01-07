@@ -109,7 +109,7 @@ class AccountController {
     }
 
     logout(req: Request, response: Response) {
-        let redis  = redisClient()
+        let redis = redisClient()
     }
 }
 

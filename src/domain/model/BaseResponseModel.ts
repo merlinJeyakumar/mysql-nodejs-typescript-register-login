@@ -9,7 +9,7 @@ export class BaseResponseModel {
         this.result = result;
     }
 
-    getJson(){
+    getJson() {
         return JSON.parse(JSON.stringify(this))
     }
 }
