@@ -6,12 +6,8 @@ import {getRefreshToken, putRefreshToken} from "../job/RedisJob";
 
 class PostController {
     async addPost(req: Request, response: Response) {
-        await putRefreshToken("JeyK", "MyCuteToken").catch(reason => {
-            console.log(`JeyK: #Error ${reason}`)
-        })
-        let value: string | unknown = await getRefreshToken("JeyK").catch(reason => {
-            console.log("JeyK: Error")
-        })
+        await putRefreshToken("JeyK", "MyCuteToken")
+        let value: string | undefined = await getRefreshToken("JeyK")
         console.log("JeyK", `value ${value}`)
         verify(req, response, (success, result) => {
             if (success) {
