@@ -42,7 +42,7 @@ class AccountController {
                     reject("invalid credential");
                 }
             })).then((userModel) => {
-                const token = req.headers.authorization.split(' ')[1];
+                req.headers.authorization.split(' ')[1];
                 const decoded = jsonwebtoken_1.default.verify(token, 'SECRETKEY');
                 response.json(new BaseResponseModel_1.BaseResponseModel("success", 1, userModel.getJson()));
             }).catch(reason => {

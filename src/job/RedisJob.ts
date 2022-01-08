@@ -9,25 +9,25 @@ redisClient.connect().catch(reason => {
     console.log(`RedisError: ${reason}`)
 })
 
-export const getRefreshToken = async (userId: string) => {
+export const getRedisRefreshToken = async (userId: string) => {
     return await redisClient.HGET(userId, "refresh").catch(reason => {
         console.log(`RedisError: ${reason}`)
         return undefined;
     });
 }
-export const getAccessToken = (userId: string) => {
+export const getRedisAccessToken = (userId: string) => {
     return redisClient.HGET(userId, "access").catch(reason => {
         console.log(`RedisError: ${reason}`)
         return undefined;
     });
 }
-export const putAccessToken = (userId: string, value: string) => {
+export const putRedisAccessToken = (userId: string, value: string) => {
     return redisClient.HSET(userId, "access", value).catch(reason => {
         console.log(`RedisError: ${reason}`)
         return undefined;
     });
 }
-export const putRefreshToken = (userId: string, value: string) => {
+export const putRedisRefreshToken = (userId: string, value: string) => {
     return redisClient.HSET(userId, "refresh", value).catch(reason => {
         console.log(`RedisError: ${reason}`)
         return undefined;

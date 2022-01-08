@@ -3,10 +3,15 @@ import {Connect, Query, ResultModel} from "../job/DatabaseJob";
 import {BaseResponseModel} from "../domain/model/BaseResponseModel";
 import jwt from "jsonwebtoken";
 import config from "../config/Configuration";
-import {sign, verify} from "../job/JwtJob";
+import {getAccessToken, getRefreshToken} from "../job/JwtJob";
 import {UserModel} from "../domain/model/UserModel";
 import {AuthenticationModel} from "../domain/model/AuthenticationModel";
 import redis = require("redis");
+import uuid = require("uuid");
+import {getRedisAccessToken, putRedisAccessToken, putRedisRefreshToken} from "../job/RedisJob";
+import {v4} from "uuid";
+import {cacheSession, getTokenInRequest, verifyAuthorization} from "./utility/AuthenticationUtility";
+import {getErrorMessage} from "../support/utility/Utility";
 
 const redisClient = redis.createClient;
 
@@ -41,16 +46,24 @@ class AccountController {
                 } else {
                     reject("invalid credential");
                 }
-            }).then((userModel) => {
-                const token = (<String>req.headers.authorization).split(' ')[1];
-                const decoded = jwt.verify(
-                    token,
-                    'SECRETKEY'
-                );
-                response.json(new BaseResponseModel("success", 1, userModel.getJson()))
+            }).then(async (userModel) => {
+
+                let refreshToken = getRefreshToken({
+                    username: userModel.userName,
+                    uid: userModel.uid
+                })
+                let accessToken = getAccessToken(userModel)
+                let baseResponseModel = new BaseResponseModel(
+                    "success",
+                    1,
+                    userModel,
+                    new AuthenticationModel(accessToken, refreshToken).getJson())
+                await putRedisAccessToken(userModel.uid.toString(), accessToken)
+                await putRedisRefreshToken(userModel.uid.toString(), refreshToken)
+                response.json(baseResponseModel)
             }).catch(reason => {
                 console.log(reason);
-                response.json(new BaseResponseModel(reason, 0, null).getJson())
+                response.json(new BaseResponseModel(reason, 0, null, null).getJson())
             }).finally(() => {
                 connection.end();
             })
@@ -78,8 +91,8 @@ class AccountController {
         Connect().then((connection) => {
             new Promise<UserModel>(async (resolve, reject) => {
                 let existenceQuery = `SELECT EXISTS(SELECT * FROM Users WHERE userName="${userName}" LIMIT 1) AS value;`
-                let insertQuery = "INSERT INTO Users (firstName, lastName, password, userName)" +
-                    `VALUES ('${firstName}','${lastName}','${password}','${userName}')` +
+                let insertQuery = "INSERT INTO Users (firstName, lastName, password, userName, uid)" +
+                    `VALUES ('${firstName}','${lastName}','${password}','${userName}','${uuid.v4()}')` +
                     "ON DUPLICATE KEY " +
                     `UPDATE firstName='${firstName}', lastName='${lastName}', password='${password}'`;
                 const userQuery = `SELECT * FROM Users WHERE userName = "${userName}" AND password = "${password}"`
@@ -95,21 +108,41 @@ class AccountController {
                     let res_: ResultModel = (<ResultModel>res)
                     return new UserModel((<ResultModel>res_).result[0]);
                 }))
-            }).then((userModel) => {
-                let token = sign(userModel)
-                let baseResponseModel = new BaseResponseModel("success", 1, new AuthenticationModel(token, userModel).getJson())
-                response.json(baseResponseModel.getJson())
+            }).then(async (userModel) => {
+                await cacheSession(userModel.uid,userModel.userName) //todo: handle response and token as resp output
+                // let baseResponseModel = new BaseResponseModel(
+                //     "success",
+                //     1,
+                //     userModel,
+                //     new AuthenticationModel(accessToken, refreshToken).getJson())
+                // await putRedisAccessToken(userModel.uid.toString(), accessToken)
+                // await putRedisRefreshToken(userModel.uid.toString(), refreshToken)
+                //response.json(baseResponseModel.getJson())
             }).catch(reason => {
                 console.log(reason);
-                response.json(new BaseResponseModel(reason, 0, null).getJson())
+                response.json(new BaseResponseModel(reason, 0, null, null).getJson())
             }).finally(() => {
                 connection.end();
             })
         })
     }
 
-    logout(req: Request, response: Response) {
-        let redis = redisClient()
+    /**
+     * uid:int
+     * token:Authorization-string
+     */
+    async logout(req: Request, response: Response) {
+        let uid = req.query.uid as string;
+        if (!uid) {
+            return response.json(new BaseResponseModel("uid required", 0, null, null).getJson())
+        }
+        try {
+            await verifyAuthorization(getTokenInRequest(req), uid)
+            req.statusCode = 200
+        } catch (e: any) {
+            req.statusCode = 401
+            response.json(new BaseResponseModel(getErrorMessage(e), 0, null, null).getJson())
+        }
     }
 }
 

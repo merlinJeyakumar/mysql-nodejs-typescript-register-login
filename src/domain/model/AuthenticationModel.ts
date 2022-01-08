@@ -1,10 +1,10 @@
 export class AuthenticationModel {
-    token: string = "";
-    result: any;
+    accessToken: string = "";
+    refreshToken: string = "";
 
-    constructor(token: string, result: any) {
-        this.token = token
-        this.result = result
+    constructor(accessToken: string, refreshToken: string) {
+        this.accessToken = accessToken
+        this.refreshToken = refreshToken
     }
 
     getJson() {

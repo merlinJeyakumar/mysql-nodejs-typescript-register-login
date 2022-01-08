@@ -1,12 +1,14 @@
 export class BaseResponseModel {
-    success: number = 1;
+    status: number = 1;
     message: String = "success";
     result: any;
+    auth:any
 
-    constructor(message: String, success: number, result: any) {
+    constructor(message: String, status: number, result: any, auth: any) {
         this.message = message;
-        this.success = success
+        this.status = status
         this.result = result;
+        this.auth = auth
     }
 
     getJson() {

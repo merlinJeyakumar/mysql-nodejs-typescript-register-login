@@ -1,13 +1,13 @@
 export class UserModel {
-    id: number = 0;
+    uid: string = "";
     status: number = 0;
-    userName: String = ""
-    firstName: String = "";
-    lastName: String = "";
-    mobileNumber: String = "";
+    userName: string = ""
+    firstName: string = "";
+    lastName: string = "";
+    mobileNumber: string = "";
 
     constructor(result: any) {
-        this.id = result.id;
+        this.uid = result.uid;
         this.firstName = result.firstName;
         this.lastName = result.lastName;
         this.status = result.status;

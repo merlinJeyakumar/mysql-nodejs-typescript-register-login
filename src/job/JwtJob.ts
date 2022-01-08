@@ -1,38 +1,37 @@
-import jwt, {JsonWebTokenError} from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import config from "../config/Configuration";
-import {BaseResponseModel} from "../domain/model/BaseResponseModel";
-import {JwtCallback} from "../domain/callback/JwtCallback";
-import {Request, Response} from "express";
 import {UserModel} from "../domain/model/UserModel";
 
-const verify = function (req: Request, response: Response, jwtCallback: JwtCallback) {
+
+export const verifyToken = function (token: string) {
     try {
-        const token = (<String>req.headers.authorization).split(' ')[1];
         if (!token) {
-            throw new JsonWebTokenError("invalid token")
+            throw new Error("invalid token")
         }
         let verifiedResult = jwt.verify(
             token,
             (<string>config.server.secretKey)
         )
-        req.statusCode = 200
-        jwtCallback(true, verifiedResult)
+        //req.statusCode = 200
+        return verifiedResult
     } catch (e) {
-        req.statusCode = 401
-        response.json(new BaseResponseModel("authentication failed", 0, null))
-        jwtCallback(false, undefined)
+        //req.statusCode = 401
+        throw new Error("authentication failed")
     }
 }
 
-const sign = function (userModel: UserModel): string {
-    return jwt.sign({
-            username: userModel.userName,
-            userId: userModel.id
-        },
+export const getRefreshToken = function (payload: any): string {
+    return jwt.sign(payload,
         (<string>config.server.secretKey), {
-            expiresIn: '1m'
+            expiresIn: '30d'
         }
     );
 }
 
-export {verify, sign}
+export const getAccessToken = function (payload: any): string {
+    return jwt.sign(payload,
+        (<string>config.server.secretKey), {
+            expiresIn: '1d'
+        }
+    );
+}
