@@ -1,6 +1,10 @@
 export const getErrorMessage = function (e:any) {
-    if (e instanceof Error) {
-        return (<Error>e).message
+    if (e) {
+        if (e instanceof Error){
+            return (<Error>e).message
+        }else{
+            return e
+        }
     }else{
         return "unexpected error"
     }

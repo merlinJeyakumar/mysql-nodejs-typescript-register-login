@@ -1,7 +1,5 @@
 import jwt from "jsonwebtoken";
 import config from "../config/Configuration";
-import {UserModel} from "../domain/model/UserModel";
-
 
 export const verifyToken = function (token: string) {
     try {

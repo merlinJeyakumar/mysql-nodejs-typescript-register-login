@@ -1,6 +1,8 @@
 import {getRedisRefreshToken, putRedisAccessToken, putRedisRefreshToken} from "../../job/RedisJob";
 import {getAccessToken, getRefreshToken, verifyToken} from "../../job/JwtJob";
 import {Request} from "express";
+import {decryptStringAes, encryptStringAes} from "../../support/EncryptionUtility";
+import config from "../../config/Configuration";
 
 export const getTokenInRequest = function (req: Request) {
     if (!req.headers.authorization) {
@@ -10,16 +12,18 @@ export const getTokenInRequest = function (req: Request) {
     }
 }
 
-export const cacheSession = async (uid: string, userName: string) => {
+export const cacheSession = async (uid: string) => {
     let payload = {
-        username: userName,
-        uid: uid
+        uid: encryptStringAes(uid, (<string>config.server.secretKey))
     }
     let refreshToken: string = getRefreshToken(payload)
     let accessToken: string = getAccessToken(payload)
     await putRedisAccessToken(uid, accessToken)
     await putRedisRefreshToken(uid, refreshToken)
-    return [refreshToken, accessToken]
+    return {
+        refreshToken,
+        accessToken
+    }
 }
 
 export const verifyAuthorization = async (token: string, uid: string) => {
@@ -32,7 +36,11 @@ export const verifyAuthorization = async (token: string, uid: string) => {
         console.log(`JeyK: ` + (<any>payload).uid == uid)
         console.log(`JeyK: ${(<any>payload).uid}`)
         console.log(`JeyK: ${uid}`)
-        if ((<any>payload).uid == uid) {
+        let payloadUid = (<any>payload).uid;
+        if (payloadUid) {
+            payloadUid = decryptStringAes(payloadUid, (<string>config.server.secretKey))
+        }
+        if (payloadUid == uid) {
             return true
         } else {
             throw new Error("unauthorized access")

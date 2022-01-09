@@ -1,19 +1,11 @@
 import {Request, Response} from "express";
 import {Connect, Query, ResultModel} from "../job/DatabaseJob";
 import {BaseResponseModel} from "../domain/model/BaseResponseModel";
-import jwt from "jsonwebtoken";
-import config from "../config/Configuration";
-import {getAccessToken, getRefreshToken} from "../job/JwtJob";
 import {UserModel} from "../domain/model/UserModel";
 import {AuthenticationModel} from "../domain/model/AuthenticationModel";
-import redis = require("redis");
 import uuid = require("uuid");
-import {getRedisAccessToken, putRedisAccessToken, putRedisRefreshToken} from "../job/RedisJob";
-import {v4} from "uuid";
 import {cacheSession, getTokenInRequest, verifyAuthorization} from "./utility/AuthenticationUtility";
 import {getErrorMessage} from "../support/utility/Utility";
-
-const redisClient = redis.createClient;
 
 
 class AccountController {
@@ -32,49 +24,39 @@ class AccountController {
 
         response.status(200);
         Connect().then((connection) => {
+            let baseResponseBuilder = new BaseResponseModel()
             new Promise<UserModel>(async (resolve, reject) => {
                 const query = `SELECT * FROM Users WHERE userName = "${userName}" AND password = "${password}"`;
+                let execResult = await Query(connection, query)
 
-                let resultModel = (<ResultModel>await Query(connection, query))
+                if (execResult.rows.length == 1) {
+                    resolve(new UserModel().setSqlResult(execResult));
 
-                if (resultModel.result.length == 1) {
-                    resolve(new UserModel(resultModel.result[0]));
-
-                } else if (resultModel.result.length > 1) {
+                } else if (execResult.rows.length > 1) {
                     reject("invalid access");
 
                 } else {
                     reject("invalid credential");
                 }
             }).then(async (userModel) => {
-
-                let refreshToken = getRefreshToken({
-                    username: userModel.userName,
-                    uid: userModel.uid
-                })
-                let accessToken = getAccessToken(userModel)
-                let baseResponseModel = new BaseResponseModel(
-                    "success",
-                    1,
-                    userModel,
-                    new AuthenticationModel(accessToken, refreshToken).getJson())
-                await putRedisAccessToken(userModel.uid.toString(), accessToken)
-                await putRedisRefreshToken(userModel.uid.toString(), refreshToken)
-                response.json(baseResponseModel)
+                let token = await cacheSession(userModel.uid)
+                baseResponseBuilder.setResult(new AuthenticationModel(token.accessToken, token.refreshToken).getJson())
+                baseResponseBuilder.asSuccess()
             }).catch(reason => {
                 console.log(reason);
-                response.json(new BaseResponseModel(reason, 0, null, null).getJson())
+                baseResponseBuilder.asFailure(getErrorMessage(reason))
             }).finally(() => {
                 connection.end();
+                response.json(baseResponseBuilder.build().getJson())
             })
         })
     }
 
     register(req: Request, response: Response) {
-        let userName = req.query.userName as String;
-        let firstName = req.query.firstName as String;
-        let lastName = req.query.lastName as String;
-        let password = req.query.password as String;
+        let userName = req.query.userName as string;
+        let firstName = req.query.firstName as string;
+        let lastName = req.query.lastName as string;
+        let password = req.query.password as string;
 
         if (userName == null) {
             return {text: "User name required"};
@@ -89,40 +71,38 @@ class AccountController {
         }
         response.status(200);
         Connect().then((connection) => {
+            let baseResponseBuilder = new BaseResponseModel()
             new Promise<UserModel>(async (resolve, reject) => {
+                const uid = uuid.v4()
                 let existenceQuery = `SELECT EXISTS(SELECT * FROM Users WHERE userName="${userName}" LIMIT 1) AS value;`
                 let insertQuery = "INSERT INTO Users (firstName, lastName, password, userName, uid)" +
-                    `VALUES ('${firstName}','${lastName}','${password}','${userName}','${uuid.v4()}')` +
-                    "ON DUPLICATE KEY " +
-                    `UPDATE firstName='${firstName}', lastName='${lastName}', password='${password}'`;
+                    `VALUES ('${firstName}','${lastName}','${password}','${userName}','${uid}');`
                 const userQuery = `SELECT * FROM Users WHERE userName = "${userName}" AND password = "${password}"`
 
-                let promiseExistence: any = await Query(connection, existenceQuery)
-
-                if ((<ResultModel>promiseExistence).result[0].value == 1) {
-                    reject("account already exist")
-                    return
+                let execResult = await Query(connection, insertQuery).catch(reason => {
+                    console.log(getErrorMessage(reason))
+                    switch (reason.code) {
+                        case "ER_DUP_ENTRY":
+                            reject("user already exist")
+                            break;
+                        default:
+                            reject("unexpected issue x001")
+                            break;
+                    }
+                })
+                if (execResult) {
+                    resolve(new UserModel().set(uid,userName,firstName,lastName,undefined))
                 }
-                await Query(connection, insertQuery);
-                resolve(await Query(connection, userQuery).then((res) => {
-                    let res_: ResultModel = (<ResultModel>res)
-                    return new UserModel((<ResultModel>res_).result[0]);
-                }))
-            }).then(async (userModel) => {
-                await cacheSession(userModel.uid,userModel.userName) //todo: handle response and token as resp output
-                // let baseResponseModel = new BaseResponseModel(
-                //     "success",
-                //     1,
-                //     userModel,
-                //     new AuthenticationModel(accessToken, refreshToken).getJson())
-                // await putRedisAccessToken(userModel.uid.toString(), accessToken)
-                // await putRedisRefreshToken(userModel.uid.toString(), refreshToken)
-                //response.json(baseResponseModel.getJson())
+            }).then(async userModel => {
+                let token = await cacheSession(userModel.uid)
+                baseResponseBuilder.setResult(new AuthenticationModel(token.accessToken, token.refreshToken).getJson())
             }).catch(reason => {
                 console.log(reason);
-                response.json(new BaseResponseModel(reason, 0, null, null).getJson())
+                req.statusCode = 400
+                baseResponseBuilder.asFailure(getErrorMessage(reason))
             }).finally(() => {
                 connection.end();
+                response.json(baseResponseBuilder.build().getJson())
             })
         })
     }
@@ -132,16 +112,17 @@ class AccountController {
      * token:Authorization-string
      */
     async logout(req: Request, response: Response) {
+        let baseResponseBuilder = new BaseResponseModel()
         let uid = req.query.uid as string;
         if (!uid) {
-            return response.json(new BaseResponseModel("uid required", 0, null, null).getJson())
+            return response.json(baseResponseBuilder.asFailure("uid required").build().getJson())
         }
         try {
             await verifyAuthorization(getTokenInRequest(req), uid)
             req.statusCode = 200
         } catch (e: any) {
             req.statusCode = 401
-            response.json(new BaseResponseModel(getErrorMessage(e), 0, null, null).getJson())
+            response.json(baseResponseBuilder.asFailure(getErrorMessage(e), 401).getJson())
         }
     }
 }

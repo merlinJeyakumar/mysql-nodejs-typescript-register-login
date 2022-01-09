@@ -14,13 +14,18 @@ const Connect = async () =>
     });
 
 const Query = async (connection: mysql.Connection, query: string) =>
-    new Promise((resolve, reject) => {
+    new Promise<{ rows: any; fields: FieldInfo[] | undefined }>((resolve, reject) => {
         connection.query(query, connection, (error, result, fields: FieldInfo[] | undefined) => {
             if (error) {
                 reject(error);
                 return;
             }
-            resolve(new ResultModel(fields, result));
+            let csd: { rows: any; fields: FieldInfo[] | undefined } = {
+                fields, rows: result
+            }
+            resolve({
+                fields, rows: result
+            });
         });
     });
 
