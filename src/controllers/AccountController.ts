@@ -10,21 +10,19 @@ import {getErrorMessage} from "../support/utility/Utility";
 
 class AccountController {
     login(req: Request, response: Response) {
+        let baseResponseBuilder = new BaseResponseModel()
         let userName: String = req.query.userName as String;
         let password: String = req.query.password as String;
 
-        console.log("> login request");
-
-        if (userName == null) {
-            return {text: "invalid userName"};
+        if (!userName || userName.length < 6) {
+            return response.json(baseResponseBuilder.asFailure("valid username required, more than six characters required").build().getJson());
         }
-        if (password == null) {
-            return {text: "invalid login password"};
+        if (!password || password.length < 8) {
+            return response.json(baseResponseBuilder.asFailure("password could be more than eight characters required").build().getJson());
         }
 
         response.status(200);
         Connect().then((connection) => {
-            let baseResponseBuilder = new BaseResponseModel()
             new Promise<UserModel>(async (resolve, reject) => {
                 const query = `SELECT * FROM Users WHERE userName = "${userName}" AND password = "${password}"`;
                 let execResult = await Query(connection, query)
@@ -74,10 +72,8 @@ class AccountController {
             let baseResponseBuilder = new BaseResponseModel()
             new Promise<UserModel>(async (resolve, reject) => {
                 const uid = uuid.v4()
-                let existenceQuery = `SELECT EXISTS(SELECT * FROM Users WHERE userName="${userName}" LIMIT 1) AS value;`
                 let insertQuery = "INSERT INTO Users (firstName, lastName, password, userName, uid)" +
                     `VALUES ('${firstName}','${lastName}','${password}','${userName}','${uid}');`
-                const userQuery = `SELECT * FROM Users WHERE userName = "${userName}" AND password = "${password}"`
 
                 let execResult = await Query(connection, insertQuery).catch(reason => {
                     console.log(getErrorMessage(reason))

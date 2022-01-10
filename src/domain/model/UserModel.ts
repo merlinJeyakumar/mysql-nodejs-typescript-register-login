@@ -19,12 +19,12 @@ export class UserModel {
     }
 
     public setSqlResult(execResult: { rows: any; fields: FieldInfo[] | undefined }) {
-        this.uid = execResult.rows.uid;
-        this.firstName = execResult.rows.firstName;
-        this.lastName = execResult.rows.lastName;
-        this.status = execResult.rows.status;
-        this.mobileNumber = execResult.rows.mobileNumber;
-        this.userName = execResult.rows.userName;
+        this.uid = execResult.rows[0].uid;
+        this.firstName = execResult.rows[0].firstName;
+        this.lastName = execResult.rows[0].lastName;
+        this.status = execResult.rows[0].status;
+        this.mobileNumber = execResult.rows[0].mobileNumber;
+        this.userName = execResult.rows[0].userName;
         return this;
     }
 
