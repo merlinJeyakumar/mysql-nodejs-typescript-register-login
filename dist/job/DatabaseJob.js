@@ -35,7 +35,12 @@ const Query = (connection, query) => __awaiter(void 0, void 0, void 0, function*
                 reject(error);
                 return;
             }
-            resolve(new ResultModel(fields, result));
+            let csd = {
+                fields, rows: result
+            };
+            resolve({
+                fields, rows: result
+            });
         });
     });
 });

@@ -20,8 +20,8 @@ class AccountRouter {
         this._router.post('/register', (req, res, next) => {
             this._controller.register(req, res);
         });
-        this._router.post('/logout', (req, res, next) => {
-            this._controller.register(req, res);
+        this._router.all('/logout', (req, res, next) => {
+            this._controller.logout(req, res);
         });
     }
 }

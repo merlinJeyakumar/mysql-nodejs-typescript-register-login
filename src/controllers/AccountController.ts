@@ -6,25 +6,25 @@ import {AuthenticationModel} from "../domain/model/AuthenticationModel";
 import uuid = require("uuid");
 import {cacheSession, getTokenInRequest, verifyAuthorization} from "./utility/AuthenticationUtility";
 import {getErrorMessage} from "../support/utility/Utility";
+import {encryptStringAes} from "../support/EncryptionUtility";
+import config from "../config/Configuration";
 
 
 class AccountController {
     login(req: Request, response: Response) {
         let baseResponseBuilder = new BaseResponseModel()
-        let userName: String = req.query.userName as String;
-        let password: String = req.query.password as String;
-
-        if (!userName || userName.length < 6) {
-            return response.json(baseResponseBuilder.asFailure("valid username required, more than six characters required").build().getJson());
-        }
-        if (!password || password.length < 8) {
-            return response.json(baseResponseBuilder.asFailure("password could be more than eight characters required").build().getJson());
-        }
+        let userName = req.query.userName as string;
+        let password = req.query.password as string;
 
         response.status(200);
+        if (!userName || userName.length < 6 || !password || password.length < 8) {
+            return response.json(baseResponseBuilder.asFailure("invalid username/password").build().getJson());
+        }
+
         Connect().then((connection) => {
             new Promise<UserModel>(async (resolve, reject) => {
-                const query = `SELECT * FROM Users WHERE userName = "${userName}" AND password = "${password}"`;
+                const query = `SELECT * FROM Users WHERE userName = "${userName}" AND password = "${encryptStringAes(password, (<string>config.server.secretKey))}"`;
+                console.log("JeyK: query ", query, +"password: "+password)
                 let execResult = await Query(connection, query)
 
                 if (execResult.rows.length == 1) {
@@ -51,29 +51,31 @@ class AccountController {
     }
 
     register(req: Request, response: Response) {
+        let baseResponseBuilder = new BaseResponseModel()
         let userName = req.query.userName as string;
         let firstName = req.query.firstName as string;
         let lastName = req.query.lastName as string;
         let password = req.query.password as string;
 
-        if (userName == null) {
-            return {text: "User name required"};
+        if (!userName || userName.length < 6) {
+            return response.json(baseResponseBuilder.asFailure("valid username required, more than six characters required").build().getJson());
         }
 
-        if (firstName == null || firstName.length < 3) {
-            return {text: "please enter valid first name"};
+        if (!firstName || firstName.length < 3) {
+            return response.json(baseResponseBuilder.asFailure("first name required, more than three characters").build().getJson());
         }
 
-        if (password == null || firstName.length < 5) {
-            return {text: "password should be valid, minimum 5 characters"};
+        if (!password || password.length < 8) {
+            return response.json(baseResponseBuilder.asFailure("password could be more than eight characters required").build().getJson());
         }
+
         response.status(200);
         Connect().then((connection) => {
             let baseResponseBuilder = new BaseResponseModel()
             new Promise<UserModel>(async (resolve, reject) => {
                 const uid = uuid.v4()
                 let insertQuery = "INSERT INTO Users (firstName, lastName, password, userName, uid)" +
-                    `VALUES ('${firstName}','${lastName}','${password}','${userName}','${uid}');`
+                    `VALUES ('${firstName}','${lastName}','${encryptStringAes(password, (<string>config.server.secretKey))}','${userName}','${uid}');`
 
                 let execResult = await Query(connection, insertQuery).catch(reason => {
                     console.log(getErrorMessage(reason))
@@ -87,7 +89,7 @@ class AccountController {
                     }
                 })
                 if (execResult) {
-                    resolve(new UserModel().set(uid,userName,firstName,lastName,undefined))
+                    resolve(new UserModel().set(uid, userName, firstName, lastName, undefined))
                 }
             }).then(async userModel => {
                 let token = await cacheSession(userModel.uid)

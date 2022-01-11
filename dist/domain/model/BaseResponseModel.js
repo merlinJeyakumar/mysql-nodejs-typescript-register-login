@@ -2,15 +2,43 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseResponseModel = void 0;
 class BaseResponseModel {
-    constructor(message, success, result) {
-        this.success = 1;
+    constructor() {
+        this.status = 1;
         this.message = "success";
-        this.message = message;
-        this.success = success;
-        this.result = result;
     }
+    /*constructor(message: String, status: number, result: any, auth: any) {
+        this.message = message;
+        this.status = status
+        this.result = result;
+        this.auth = auth
+    }*/
     getJson() {
         return JSON.parse(JSON.stringify(this));
+    }
+    setStatus(status) {
+        this.status = status;
+        return this;
+    }
+    setMessage(message) {
+        this.message = message;
+        return this;
+    }
+    setResult(result) {
+        this.result = result;
+        return this;
+    }
+    asSuccess(message = "success", status = 200) {
+        this.message = message;
+        this.status = status;
+        return this;
+    }
+    asFailure(message = "failed", status = 200) {
+        this.message = message;
+        this.status = status;
+        return this;
+    }
+    build() {
+        return this;
     }
 }
 exports.BaseResponseModel = BaseResponseModel;

@@ -14,6 +14,8 @@ const MYSQL_PASS = process.env.MYSQL_PASS;
 const SERVER_HOSTNAME = process.env.SERVER_NAME;
 const SERVER_PORT = process.env.PORT;
 const SECRET_ACCESS_KEY = process.env.SECRET_ACCESS_KEY;
+const REDIS_PORT = process.env.REDIS_PORT;
+const REDIS_PASS = process.env.REDIS_PASS;
 const MYSQL = {
     host: MYSQL_HOST,
     database: MYSQL_DATABASE,
@@ -25,8 +27,13 @@ const SERVER = {
     port: SERVER_PORT,
     secretKey: SECRET_ACCESS_KEY
 };
+const REDIS = {
+    port: REDIS_PORT,
+    pass: REDIS_PASS
+};
 const config = {
     mysql: MYSQL,
-    server: SERVER
+    server: SERVER,
+    redis: REDIS
 };
 exports.default = config;

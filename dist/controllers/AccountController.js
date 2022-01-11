@@ -13,92 +13,118 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 const DatabaseJob_1 = require("../job/DatabaseJob");
 const BaseResponseModel_1 = require("../domain/model/BaseResponseModel");
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const JwtJob_1 = require("../job/JwtJob");
 const UserModel_1 = require("../domain/model/UserModel");
+const AuthenticationModel_1 = require("../domain/model/AuthenticationModel");
+const uuid = require("uuid");
+const AuthenticationUtility_1 = require("./utility/AuthenticationUtility");
+const Utility_1 = require("../support/utility/Utility");
+const EncryptionUtility_1 = require("../support/EncryptionUtility");
+const Configuration_1 = __importDefault(require("../config/Configuration"));
 class AccountController {
     login(req, response) {
+        let baseResponseBuilder = new BaseResponseModel_1.BaseResponseModel();
         let userName = req.query.userName;
         let password = req.query.password;
-        console.log("> login request");
-        if (userName == null) {
-            return { text: "invalid userName" };
-        }
-        if (password == null) {
-            return { text: "invalid login password" };
-        }
         response.status(200);
+        if (!userName || userName.length < 6 || !password || password.length < 8) {
+            return response.json(baseResponseBuilder.asFailure("invalid username/password").build().getJson());
+        }
         (0, DatabaseJob_1.Connect)().then((connection) => {
             new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                const query = `SELECT * FROM Users WHERE userName = "${userName}" AND password = "${password}"`;
-                let resultModel = yield (0, DatabaseJob_1.Query)(connection, query);
-                if (resultModel.result.length == 1) {
-                    resolve(new UserModel_1.UserModel(resultModel.result[0]));
+                const query = `SELECT * FROM Users WHERE userName = "${userName}" AND password = "${(0, EncryptionUtility_1.encryptStringAes)(password, Configuration_1.default.server.secretKey)}"`;
+                console.log("JeyK: query ", query, +"password: " + password);
+                let execResult = yield (0, DatabaseJob_1.Query)(connection, query);
+                if (execResult.rows.length == 1) {
+                    resolve(new UserModel_1.UserModel().setSqlResult(execResult));
                 }
-                else if (resultModel.result.length > 1) {
+                else if (execResult.rows.length > 1) {
                     reject("invalid access");
                 }
                 else {
                     reject("invalid credential");
                 }
-            })).then((userModel) => {
-                req.headers.authorization.split(' ')[1];
-                const decoded = jsonwebtoken_1.default.verify(token, 'SECRETKEY');
-                response.json(new BaseResponseModel_1.BaseResponseModel("success", 1, userModel.getJson()));
-            }).catch(reason => {
+            })).then((userModel) => __awaiter(this, void 0, void 0, function* () {
+                let token = yield (0, AuthenticationUtility_1.cacheSession)(userModel.uid);
+                baseResponseBuilder.setResult(new AuthenticationModel_1.AuthenticationModel(token.accessToken, token.refreshToken).getJson());
+                baseResponseBuilder.asSuccess();
+            })).catch(reason => {
                 console.log(reason);
-                response.json(new BaseResponseModel_1.BaseResponseModel(reason, 0, null).getJson());
+                baseResponseBuilder.asFailure((0, Utility_1.getErrorMessage)(reason));
             }).finally(() => {
                 connection.end();
+                response.json(baseResponseBuilder.build().getJson());
             });
         });
     }
     register(req, response) {
+        let baseResponseBuilder = new BaseResponseModel_1.BaseResponseModel();
         let userName = req.query.userName;
         let firstName = req.query.firstName;
         let lastName = req.query.lastName;
         let password = req.query.password;
-        if (userName == null) {
-            return { text: "User name required" };
+        if (!userName || userName.length < 6) {
+            return response.json(baseResponseBuilder.asFailure("valid username required, more than six characters required").build().getJson());
         }
-        if (firstName == null || firstName.length < 3) {
-            return { text: "please enter valid first name" };
+        if (!firstName || firstName.length < 3) {
+            return response.json(baseResponseBuilder.asFailure("first name required, more than three characters").build().getJson());
         }
-        if (password == null || firstName.length < 5) {
-            return { text: "password should be valid, minimum 5 characters" };
+        if (!password || password.length < 8) {
+            return response.json(baseResponseBuilder.asFailure("password could be more than eight characters required").build().getJson());
         }
         response.status(200);
         (0, DatabaseJob_1.Connect)().then((connection) => {
+            let baseResponseBuilder = new BaseResponseModel_1.BaseResponseModel();
             new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                let existenceQuery = `SELECT EXISTS(SELECT * FROM Users WHERE userName="${userName}" LIMIT 1) AS value;`;
-                let insertQuery = "INSERT INTO Users (firstName, lastName, password, userName)" +
-                    `VALUES ('${firstName}','${lastName}','${password}','${userName}')` +
-                    "ON DUPLICATE KEY " +
-                    `UPDATE firstName='${firstName}', lastName='${lastName}', password='${password}'`;
-                const userQuery = `SELECT * FROM Users WHERE userName = "${userName}" AND password = "${password}"`;
-                let promiseExistence = yield (0, DatabaseJob_1.Query)(connection, existenceQuery);
-                if (promiseExistence.result[0].value == 1) {
-                    reject("account already exist");
-                    return;
+                const uid = uuid.v4();
+                let insertQuery = "INSERT INTO Users (firstName, lastName, password, userName, uid)" +
+                    `VALUES ('${firstName}','${lastName}','${(0, EncryptionUtility_1.encryptStringAes)(password, Configuration_1.default.server.secretKey)}','${userName}','${uid}');`;
+                let execResult = yield (0, DatabaseJob_1.Query)(connection, insertQuery).catch(reason => {
+                    console.log((0, Utility_1.getErrorMessage)(reason));
+                    switch (reason.code) {
+                        case "ER_DUP_ENTRY":
+                            reject("user already exist");
+                            break;
+                        default:
+                            reject("unexpected issue x001");
+                            break;
+                    }
+                });
+                if (execResult) {
+                    resolve(new UserModel_1.UserModel().set(uid, userName, firstName, lastName, undefined));
                 }
-                yield (0, DatabaseJob_1.Query)(connection, insertQuery);
-                resolve(yield (0, DatabaseJob_1.Query)(connection, userQuery).then((res) => {
-                    let res_ = res;
-                    return new UserModel_1.UserModel(res_.result[0]);
-                }));
-            })).then((userModel) => {
-                let token = (0, JwtJob_1.sign)(userModel);
-                let baseResponseModel = new BaseResponseModel_1.BaseResponseModel("success", 1, userModel.getJson());
-                response.json(baseResponseModel.getJson());
-            }).catch(reason => {
+            })).then((userModel) => __awaiter(this, void 0, void 0, function* () {
+                let token = yield (0, AuthenticationUtility_1.cacheSession)(userModel.uid);
+                baseResponseBuilder.setResult(new AuthenticationModel_1.AuthenticationModel(token.accessToken, token.refreshToken).getJson());
+            })).catch(reason => {
                 console.log(reason);
-                response.json(new BaseResponseModel_1.BaseResponseModel(reason, 0, null).getJson());
+                req.statusCode = 400;
+                baseResponseBuilder.asFailure((0, Utility_1.getErrorMessage)(reason));
             }).finally(() => {
                 connection.end();
+                response.json(baseResponseBuilder.build().getJson());
             });
         });
     }
+    /**
+     * uid:int
+     * token:Authorization-string
+     */
     logout(req, response) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let baseResponseBuilder = new BaseResponseModel_1.BaseResponseModel();
+            let uid = req.query.uid;
+            if (!uid) {
+                return response.json(baseResponseBuilder.asFailure("uid required").build().getJson());
+            }
+            try {
+                yield (0, AuthenticationUtility_1.verifyAuthorization)((0, AuthenticationUtility_1.getTokenInRequest)(req), uid);
+                req.statusCode = 200;
+            }
+            catch (e) {
+                req.statusCode = 401;
+                response.json(baseResponseBuilder.asFailure((0, Utility_1.getErrorMessage)(e), 401).getJson());
+            }
+        });
     }
 }
 module.exports = new AccountController();

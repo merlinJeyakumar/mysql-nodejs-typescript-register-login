@@ -1,54 +1,35 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sign = exports.verify = void 0;
-const jsonwebtoken_1 = __importStar(require("jsonwebtoken"));
+exports.getAccessToken = exports.getRefreshToken = exports.verifyToken = void 0;
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const Configuration_1 = __importDefault(require("../config/Configuration"));
-const BaseResponseModel_1 = require("../domain/model/BaseResponseModel");
-const verify = function (req, response, jwtCallback) {
+const verifyToken = function (token) {
     try {
-        const token = req.headers.authorization.split(' ')[1];
         if (!token) {
-            throw new jsonwebtoken_1.JsonWebTokenError("invalid token");
+            throw new Error("invalid token");
         }
         let verifiedResult = jsonwebtoken_1.default.verify(token, Configuration_1.default.server.secretKey);
-        req.statusCode = 200;
-        jwtCallback(true, verifiedResult);
+        //req.statusCode = 200
+        return verifiedResult;
     }
     catch (e) {
-        req.statusCode = 401;
-        response.json(new BaseResponseModel_1.BaseResponseModel("authentication failed", 0, null));
-        jwtCallback(false, undefined);
+        //req.statusCode = 401
+        throw new Error("authentication failed");
     }
 };
-exports.verify = verify;
-const sign = function (userModel) {
-    return jsonwebtoken_1.default.sign({
-        username: userModel.userName,
-        userId: userModel.id
-    }, Configuration_1.default.server.secretKey, {
-        expiresIn: '1m'
+exports.verifyToken = verifyToken;
+const getRefreshToken = function (payload) {
+    return jsonwebtoken_1.default.sign(payload, Configuration_1.default.server.secretKey, {
+        expiresIn: '30d'
     });
 };
-exports.sign = sign;
+exports.getRefreshToken = getRefreshToken;
+const getAccessToken = function (payload) {
+    return jsonwebtoken_1.default.sign(payload, Configuration_1.default.server.secretKey, {
+        expiresIn: '1d'
+    });
+};
+exports.getAccessToken = getAccessToken;
