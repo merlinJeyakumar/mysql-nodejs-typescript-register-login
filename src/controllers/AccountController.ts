@@ -6,8 +6,7 @@ import {AuthenticationModel} from "../domain/model/AuthenticationModel";
 import uuid = require("uuid");
 import {cacheSession, getTokenInRequest, verifyAuthorization} from "./utility/AuthenticationUtility";
 import {getErrorMessage} from "../support/utility/Utility";
-import {encryptStringAes} from "../support/EncryptionUtility";
-import config from "../config/Configuration";
+import {compareHashPassword, encryptStringAes, getPasswordHash} from "../support/EncryptionUtility";
 
 
 class AccountController {
@@ -23,22 +22,19 @@ class AccountController {
 
         Connect().then((connection) => {
             new Promise<UserModel>(async (resolve, reject) => {
-                const query = `SELECT * FROM Users WHERE userName = "${userName}" AND password = "${encryptStringAes(password, (<string>config.server.secretKey))}"`;
-                console.log("JeyK: query ", query, +"password: "+password)
-                let execResult = await Query(connection, query)
-
-                if (execResult.rows.length == 1) {
-                    resolve(new UserModel().setSqlResult(execResult));
-
-                } else if (execResult.rows.length > 1) {
-                    reject("invalid access");
-
+                let execResult = await Query(connection, `SELECT * FROM Users WHERE userName = '${userName}'`).catch(reason => {
+                    reject(reason)
+                })
+                const userModel = new UserModel().setSqlResult(execResult);
+                if (userModel && await compareHashPassword(password, userModel.password)) {
+                    resolve(userModel)
                 } else {
-                    reject("invalid credential");
+                    reject("invalid credentials")
                 }
             }).then(async (userModel) => {
                 let token = await cacheSession(userModel.uid)
-                baseResponseBuilder.setResult(new AuthenticationModel(token.accessToken, token.refreshToken).getJson())
+                baseResponseBuilder.setAuth(new AuthenticationModel(token.accessToken, token.refreshToken).getJson())
+                baseResponseBuilder.setResult(userModel.getJson())
                 baseResponseBuilder.asSuccess()
             }).catch(reason => {
                 console.log(reason);
@@ -75,7 +71,7 @@ class AccountController {
             new Promise<UserModel>(async (resolve, reject) => {
                 const uid = uuid.v4()
                 let insertQuery = "INSERT INTO Users (firstName, lastName, password, userName, uid)" +
-                    `VALUES ('${firstName}','${lastName}','${encryptStringAes(password, (<string>config.server.secretKey))}','${userName}','${uid}');`
+                    `VALUES ('${firstName}','${lastName}','${await getPasswordHash(password)}','${userName}','${uid}');`
 
                 let execResult = await Query(connection, insertQuery).catch(reason => {
                     console.log(getErrorMessage(reason))
@@ -89,11 +85,12 @@ class AccountController {
                     }
                 })
                 if (execResult) {
-                    resolve(new UserModel().set(uid, userName, firstName, lastName, undefined))
+                    resolve(new UserModel().set(uid, userName, firstName, lastName, undefined, password))
                 }
             }).then(async userModel => {
                 let token = await cacheSession(userModel.uid)
-                baseResponseBuilder.setResult(new AuthenticationModel(token.accessToken, token.refreshToken).getJson())
+                baseResponseBuilder.setAuth(token)
+                baseResponseBuilder.setResult(userModel)
             }).catch(reason => {
                 console.log(reason);
                 req.statusCode = 400

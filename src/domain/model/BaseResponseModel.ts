@@ -1,8 +1,10 @@
+import {AuthenticationModel} from "./AuthenticationModel";
+
 export class BaseResponseModel {
     status: number = 1;
     message: String = "success";
     result: any;
-    auth: any
+    auth: any;
 
     /*constructor(message: String, status: number, result: any, auth: any) {
         this.message = message;
@@ -25,18 +27,22 @@ export class BaseResponseModel {
         return this
     }
 
+    public setAuth(auth: any) {
+        this.auth = auth;
+    }
+
     public setResult(result: any) {
         this.result = result
         return this
     }
 
-    public asSuccess(message: any | undefined = "success", status: number | undefined = 200) {
+    public asSuccess(message: any | undefined = "successful", status: number | undefined = 1) {
         this.message = message
         this.status = status
         return this
     }
 
-    public asFailure(message: any | undefined = "failed", status: number | undefined = 200) {
+    public asFailure(message: any | undefined = "failed", status: number | undefined = 0) {
         this.message = message
         this.status = status
         return this
