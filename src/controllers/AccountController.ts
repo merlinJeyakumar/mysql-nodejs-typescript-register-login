@@ -7,7 +7,6 @@ import uuid = require("uuid");
 import {cacheSession, clearSession, getTokenInRequest, verifyAuthorization} from "./utility/AuthenticationUtility";
 import {getErrorMessage} from "../support/utility/Utility";
 import {compareHashPassword, encryptStringAes, getPasswordHash} from "../support/EncryptionUtility";
-import {getRedisAccessToken} from "../job/RedisJob";
 
 
 class AccountController {
@@ -34,8 +33,6 @@ class AccountController {
                 }
             }).then(async (userModel) => {
                 let token = await cacheSession(userModel.uid)
-                console.log("token: ", token.accessToken)
-                console.log("token cached: ", await getRedisAccessToken(userModel.uid))
                 baseResponseBuilder.setAuth(new AuthenticationModel(token.accessToken, token.refreshToken).getJson())
                 baseResponseBuilder.setResult(userModel.getJson())
                 baseResponseBuilder.asSuccess()
@@ -165,7 +162,6 @@ class AccountController {
                 index++;
             })
             query = `UPDATE Users SET ${query} WHERE (\`uid\` = '${uid}');`
-            console.log("JeyK: query: ", query)
             Query(connection, query).then(async value => {
                 let token = await cacheSession(uid)
                 baseResponseBuilder.setAuth(new AuthenticationModel(token.accessToken, token.refreshToken).getJson())

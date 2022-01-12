@@ -9,7 +9,6 @@ import {getAccessToken, getRefreshToken, verifyToken} from "../../job/JwtJob";
 import {Request} from "express";
 import {decryptStringAes, encryptStringAes} from "../../support/EncryptionUtility";
 import config from "../../config/Configuration";
-import {getErrorMessage} from "../../support/utility/Utility";
 
 export const getTokenInRequest = function (req: Request) {
     if (!req.headers.authorization) {
@@ -27,7 +26,6 @@ export const cacheSession = async (uid: string) => {
     let accessToken: string = getAccessToken(payload)
     await putRedisAccessToken(uid, accessToken)
     await putRedisRefreshToken(uid, refreshToken)
-    console.log("cachedToken:", await getRedisAccessToken(uid))
     return {
         refreshToken,
         accessToken
@@ -48,15 +46,10 @@ export const verifyAuthorization = async (token: string, uid: string) => {
     if (!uid) {
         throw new Error("uid required")
     }
-    console.log("uid: ", uid)
     let refreshToken = await getRedisAccessToken(uid) //todo: register not updating redis
-    console.log("refreshToken: ", refreshToken)
-    if (refreshToken) {
-        console.log("verifyToken: ",token)
+
+    if (refreshToken && token == refreshToken) {
         let payload = verifyToken(token);
-        console.log(`JeyK: ` + (<any>payload).uid == uid)
-        console.log(`JeyK: ${(<any>payload).uid}`)
-        console.log(`JeyK: ${uid}`)
         let payloadUid = (<any>payload).uid;
         if (payloadUid) {
             payloadUid = decryptStringAes(payloadUid, (<string>config.server.secretKey))
