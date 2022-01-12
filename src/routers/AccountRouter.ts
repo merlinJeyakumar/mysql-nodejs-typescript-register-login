@@ -20,6 +20,9 @@ class AccountRouter {
         this._router.post('/register', (req: Request, res: Response, next: NextFunction) => {
             this._controller.register(req, res);
         })
+        this._router.all('/profileUpdate', (req: Request, res: Response, next: NextFunction) => {
+            this._controller.profileUpdate(req, res);
+        })
         this._router.all('/logout', (req: Request, res: Response, next: NextFunction) => {
             this._controller.logout(req, res);
         })

@@ -102,6 +102,48 @@ class AccountController {
         })
     }
 
+    async profileUpdate(req: Request, response: Response) {
+        let baseResponseBuilder = new BaseResponseModel()
+        let uid = req.query.uid as string;
+        if (!uid) {
+            return response.json(baseResponseBuilder.asFailure("uid required").getJson())
+        }
+        try {
+            await verifyAuthorization(getTokenInRequest(req), uid) //authentication
+            req.statusCode = 200
+        } catch (e: any) {
+            req.statusCode = 401
+            return response.json(baseResponseBuilder.asFailure(getErrorMessage(e), 401).getJson())
+        }
+        let firstName = req.query.firstName as string;
+        let lastName = req.query.lastName as string;
+        let mobileNumber = req.query.mobileNumber as string;
+        let password = req.query.password as string;
+        let userName = req.query.userName as string;
+
+        if (firstName && (firstName.length < 6 || firstName.length > 16)) {
+            return response.json(baseResponseBuilder.asFailure("invalid first name, it length could be more than six to 16").getJson())
+        }
+        if (lastName && (lastName.length == 0 || lastName.length > 10)) {
+            return response.json(baseResponseBuilder.asFailure("invalid last name, it length could be more than ").getJson())
+        }
+        if (mobileNumber && (mobileNumber.length < 6 || mobileNumber.length > 11)) {
+            return response.json(baseResponseBuilder.asFailure("invalid mobile number").getJson())
+        }
+        if (password && (password.length < 6 || mobileNumber.length > 22)) {
+            return response.json(baseResponseBuilder.asFailure("invalid password, it length could be more than six to 22").getJson())
+        }
+        if (userName && (userName.length < 6 || userName.length > 16)) {
+            return response.json(baseResponseBuilder.asFailure("invalid password, it length could be more than six to 16").getJson())
+        }
+        if (!firstName && !lastName && !mobileNumber && !password && !userName) {
+            return response.json(baseResponseBuilder.asFailure("invalid usage").getJson())
+        }
+        //todo: update to db and share a token
+        let token = await cacheSession(uid)
+        baseResponseBuilder.setAuth(new AuthenticationModel(token.accessToken, token.refreshToken).getJson())
+    }
+
     /**
      * uid:int
      * token:Authorization-string
