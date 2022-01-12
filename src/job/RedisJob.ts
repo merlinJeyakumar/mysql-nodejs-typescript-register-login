@@ -33,3 +33,7 @@ export const putRedisRefreshToken = (userId: string, value: string) => {
         return undefined;
     });
 }
+
+export const clearRedisKey = function (key:string) {
+    return redisClient.del(key)
+}

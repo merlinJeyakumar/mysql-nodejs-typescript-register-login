@@ -16,6 +16,7 @@ export class UserModel {
         this.status = 1;
         this.mobileNumber = mobileNumber;
         this.userName = userName;
+        this.password = password;
         return this;
     }
 

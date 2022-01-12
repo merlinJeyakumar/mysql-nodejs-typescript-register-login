@@ -4,7 +4,7 @@ import {BaseResponseModel} from "../domain/model/BaseResponseModel";
 import {UserModel} from "../domain/model/UserModel";
 import {AuthenticationModel} from "../domain/model/AuthenticationModel";
 import uuid = require("uuid");
-import {cacheSession, getTokenInRequest, verifyAuthorization} from "./utility/AuthenticationUtility";
+import {cacheSession, clearSession, getTokenInRequest, verifyAuthorization} from "./utility/AuthenticationUtility";
 import {getErrorMessage} from "../support/utility/Utility";
 import {compareHashPassword, encryptStringAes, getPasswordHash} from "../support/EncryptionUtility";
 
@@ -58,11 +58,11 @@ class AccountController {
         }
 
         if (!firstName || firstName.length < 3) {
-            return response.json(baseResponseBuilder.asFailure("first name required, more than three characters").build().getJson());
+            return response.json(baseResponseBuilder.asFailure("valid first name required, more than three characters").build().getJson());
         }
 
         if (!password || password.length < 8) {
-            return response.json(baseResponseBuilder.asFailure("password could be more than eight characters required").build().getJson());
+            return response.json(baseResponseBuilder.asFailure("valid password required, could be more than eight characters").build().getJson());
         }
 
         response.status(200);
@@ -114,7 +114,9 @@ class AccountController {
         }
         try {
             await verifyAuthorization(getTokenInRequest(req), uid)
+            await clearSession(uid)
             req.statusCode = 200
+            response.json(baseResponseBuilder.asSuccess().getJson())
         } catch (e: any) {
             req.statusCode = 401
             response.json(baseResponseBuilder.asFailure(getErrorMessage(e), 401).getJson())
