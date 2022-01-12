@@ -27,6 +27,7 @@ export const cacheSession = async (uid: string) => {
     let accessToken: string = getAccessToken(payload)
     await putRedisAccessToken(uid, accessToken)
     await putRedisRefreshToken(uid, refreshToken)
+    console.log("cachedToken:", await getRedisAccessToken(uid))
     return {
         refreshToken,
         accessToken
@@ -47,8 +48,11 @@ export const verifyAuthorization = async (token: string, uid: string) => {
     if (!uid) {
         throw new Error("uid required")
     }
+    console.log("uid: ", uid)
     let refreshToken = await getRedisAccessToken(uid) //todo: register not updating redis
+    console.log("refreshToken: ", refreshToken)
     if (refreshToken) {
+        console.log("verifyToken: ",token)
         let payload = verifyToken(token);
         console.log(`JeyK: ` + (<any>payload).uid == uid)
         console.log(`JeyK: ${(<any>payload).uid}`)

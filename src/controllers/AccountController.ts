@@ -7,6 +7,7 @@ import uuid = require("uuid");
 import {cacheSession, clearSession, getTokenInRequest, verifyAuthorization} from "./utility/AuthenticationUtility";
 import {getErrorMessage} from "../support/utility/Utility";
 import {compareHashPassword, encryptStringAes, getPasswordHash} from "../support/EncryptionUtility";
+import {getRedisAccessToken} from "../job/RedisJob";
 
 
 class AccountController {
@@ -33,6 +34,8 @@ class AccountController {
                 }
             }).then(async (userModel) => {
                 let token = await cacheSession(userModel.uid)
+                console.log("token: ", token.accessToken)
+                console.log("token cached: ", await getRedisAccessToken(userModel.uid))
                 baseResponseBuilder.setAuth(new AuthenticationModel(token.accessToken, token.refreshToken).getJson())
                 baseResponseBuilder.setResult(userModel.getJson())
                 baseResponseBuilder.asSuccess()
@@ -120,28 +123,59 @@ class AccountController {
         let mobileNumber = req.query.mobileNumber as string;
         let password = req.query.password as string;
         let userName = req.query.userName as string;
+        let updateMap = new Map<string, string>()
 
         if (firstName && (firstName.length < 6 || firstName.length > 16)) {
             return response.json(baseResponseBuilder.asFailure("invalid first name, it length could be more than six to 16").getJson())
+        } else if (firstName){
+            updateMap.set("firstName", firstName)
         }
-        if (lastName && (lastName.length == 0 || lastName.length > 10)) {
+        if (lastName && (lastName.length == 0 || lastName.length > 16)) {
             return response.json(baseResponseBuilder.asFailure("invalid last name, it length could be more than ").getJson())
+        } else if (lastName) {
+            updateMap.set("lastName", lastName)
         }
-        if (mobileNumber && (mobileNumber.length < 6 || mobileNumber.length > 11)) {
+        if (mobileNumber && (mobileNumber.length < 6 || mobileNumber.length > 13)) {
             return response.json(baseResponseBuilder.asFailure("invalid mobile number").getJson())
+        } else if (mobileNumber) {
+            updateMap.set("mobileNumber", mobileNumber)
         }
         if (password && (password.length < 6 || mobileNumber.length > 22)) {
             return response.json(baseResponseBuilder.asFailure("invalid password, it length could be more than six to 22").getJson())
+        } else if (password) {
+            updateMap.set("password", password)
         }
         if (userName && (userName.length < 6 || userName.length > 16)) {
             return response.json(baseResponseBuilder.asFailure("invalid password, it length could be more than six to 16").getJson())
+        } else if (userName) {
+            updateMap.set("userName", userName)
         }
-        if (!firstName && !lastName && !mobileNumber && !password && !userName) {
+        if (updateMap.size == 0) {
             return response.json(baseResponseBuilder.asFailure("invalid usage").getJson())
         }
-        //todo: update to db and share a token
-        let token = await cacheSession(uid)
-        baseResponseBuilder.setAuth(new AuthenticationModel(token.accessToken, token.refreshToken).getJson())
+
+        Connect().then(connection => {
+            let query = "";
+            let index = 0
+            updateMap.forEach((value, key) => {
+                query += `\`${key}\` = '${value}'`
+                if (index < updateMap.size - 1) {
+                    query += `,`
+                }
+                index++;
+            })
+            query = `UPDATE Users SET ${query} WHERE (\`uid\` = '${uid}');`
+            console.log("JeyK: query: ", query)
+            Query(connection, query).then(async value => {
+                let token = await cacheSession(uid)
+                baseResponseBuilder.setAuth(new AuthenticationModel(token.accessToken, token.refreshToken).getJson())
+            }).catch(reason => {
+                baseResponseBuilder.asFailure(reason)
+            }).finally(()=>{
+                connection.end()
+                response.json(baseResponseBuilder.getJson())
+            })
+        })
     }
 
     /**
