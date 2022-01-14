@@ -10,7 +10,7 @@ import {compareHashPassword, encryptStringAes, getPasswordHash} from "../support
 
 
 class AccountController {
-    login(req: Request, response: Response) {
+    async login(req: Request, response: Response) {
         let baseResponseBuilder = new BaseResponseModel()
         let userName = req.query.userName as string;
         let password = req.query.password as string;
@@ -46,7 +46,7 @@ class AccountController {
         })
     }
 
-    register(req: Request, response: Response) {
+    async register(req: Request, response: Response) {
         let baseResponseBuilder = new BaseResponseModel()
         let userName = req.query.userName as string;
         let firstName = req.query.firstName as string;
@@ -70,7 +70,7 @@ class AccountController {
             let baseResponseBuilder = new BaseResponseModel()
             new Promise<UserModel>(async (resolve, reject) => {
                 const uid = uuid.v4()
-                let insertQuery = "INSERT INTO Users (firstName, lastName, password, userName, uid)" +
+                let insertQuery = "INSERT INTO Users (first_name, last_name, password, userName, uid)" +
                     `VALUES ('${firstName}','${lastName}','${await getPasswordHash(password)}','${userName}','${uid}');`
 
                 let execResult = await Query(connection, insertQuery).catch(reason => {
@@ -193,6 +193,10 @@ class AccountController {
             req.statusCode = 401
             response.json(baseResponseBuilder.asFailure(getErrorMessage(e), 401).getJson())
         }
+    }
+
+    async refreshToken(req: Request, response: Response){
+
     }
 }
 

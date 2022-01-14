@@ -4,8 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
+let environment = process.env.NODE_ENV;
 dotenv_1.default.config({
-    path: '.env'
+    path: environment == 'development' || environment == undefined ? "development" : "production"
 });
 const MYSQL_HOST = process.env.MYSQL_HOST;
 const MYSQL_DATABASE = process.env.MYSQL_DATABASE;

@@ -23,16 +23,19 @@ class BaseResponseModel {
         this.message = message;
         return this;
     }
+    setAuth(auth) {
+        this.auth = auth;
+    }
     setResult(result) {
         this.result = result;
         return this;
     }
-    asSuccess(message = "success", status = 200) {
+    asSuccess(message = "successful", status = 1) {
         this.message = message;
         this.status = status;
         return this;
     }
-    asFailure(message = "failed", status = 200) {
+    asFailure(message = "failed", status = 0) {
         this.message = message;
         this.status = status;
         return this;

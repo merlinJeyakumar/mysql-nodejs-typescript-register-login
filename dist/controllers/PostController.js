@@ -8,19 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const EncryptionUtility_1 = require("../support/EncryptionUtility");
-/* https://github.com/brix/crypto-js/issues/271 */
+const RedisJob_1 = require("../job/RedisJob");
 class PostController {
     addPost(req, response) {
         return __awaiter(this, void 0, void 0, function* () {
-            const encryptedText = (0, EncryptionUtility_1.encryptStringAes)("bujji harshi", "harshi");
-            console.log("JeyK: encryptedText: ", encryptedText);
-            const decryptedText = (0, EncryptionUtility_1.decryptStringAes)(encryptedText, "harshi");
-            console.log("JeyK: decryptedText: ", decryptedText);
-            //await putRedisRefreshToken("JeyK", "MyCuteToken")
-            //let value: string | undefined = await getRedisRefreshToken("JeyK")
-            //console.log("JeyK", `value ${value}`)
-            response.json("{}");
+            yield (0, RedisJob_1.putRedisRefreshToken)("JeyK", "MyCuteToken");
+            let value = yield (0, RedisJob_1.getRedisRefreshToken)("JeyK");
+            console.log("JeyK", `value ${value}`);
             //todo: authorization
         });
     }

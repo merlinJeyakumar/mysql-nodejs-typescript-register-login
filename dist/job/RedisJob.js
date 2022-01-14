@@ -31,7 +31,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.putRedisRefreshToken = exports.putRedisAccessToken = exports.getRedisAccessToken = exports.getRedisRefreshToken = void 0;
+exports.clearRedisKey = exports.putRedisRefreshToken = exports.putRedisAccessToken = exports.getRedisAccessToken = exports.getRedisRefreshToken = void 0;
 const redis = __importStar(require("redis"));
 const Configuration_1 = __importDefault(require("../config/Configuration"));
 const redisClient = redis.createClient({
@@ -68,3 +68,7 @@ const putRedisRefreshToken = (userId, value) => {
     });
 };
 exports.putRedisRefreshToken = putRedisRefreshToken;
+const clearRedisKey = function (key) {
+    return redisClient.del(key);
+};
+exports.clearRedisKey = clearRedisKey;

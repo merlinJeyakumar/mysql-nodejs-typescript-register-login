@@ -1,7 +1,8 @@
 import dotenv from 'dotenv'
 
+let environment = process.env.NODE_ENV
 dotenv.config({
-    path: '.env'
+    path: environment == 'development' || environment == undefined ? "env/development.env" : "env/production.env"
 });
 
 const MYSQL_HOST = process.env.MYSQL_HOST;
