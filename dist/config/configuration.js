@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const dotenv_1 = __importDefault(require("dotenv"));
 let environment = process.env.NODE_ENV;
 dotenv_1.default.config({
-    path: environment == 'development' || environment == undefined ? "development" : "production"
+    path: environment == 'development' || environment == undefined ? "env/development.env" : "env/production.env"
 });
 const MYSQL_HOST = process.env.MYSQL_HOST;
 const MYSQL_DATABASE = process.env.MYSQL_DATABASE;

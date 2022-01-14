@@ -5,24 +5,24 @@ import {UserModel} from "../domain/model/UserModel";
 import {AuthenticationModel} from "../domain/model/AuthenticationModel";
 import uuid = require("uuid");
 import {cacheSession, clearSession, getTokenInRequest, verifyAuthorization} from "./utility/AuthenticationUtility";
-import {getErrorMessage} from "../support/utility/Utility";
+import {getCurrentTimeStamp, getErrorMessage} from "../support/utility/Utility";
 import {compareHashPassword, encryptStringAes, getPasswordHash} from "../support/EncryptionUtility";
 
 
 class AccountController {
     async login(req: Request, response: Response) {
         let baseResponseBuilder = new BaseResponseModel()
-        let userName = req.query.userName as string;
+        let username = req.query.userName as string;
         let password = req.query.password as string;
 
         response.status(200);
-        if (!userName || userName.length < 6 || !password || password.length < 8) {
+        if (!username || username.length < 6 || !password || password.length < 8) {
             return response.json(baseResponseBuilder.asFailure("invalid username/password").build().getJson());
         }
 
         Connect().then((connection) => {
             new Promise<UserModel>(async (resolve, reject) => {
-                let execResult = await Query(connection, `SELECT * FROM Users WHERE userName = '${userName}'`).catch(reason => {
+                let execResult = await Query(connection, `SELECT * FROM Users WHERE userName = '${username}'`).catch(reason => {
                     reject(reason)
                 })
                 const userModel = new UserModel().setSqlResult(execResult);
@@ -48,16 +48,16 @@ class AccountController {
 
     async register(req: Request, response: Response) {
         let baseResponseBuilder = new BaseResponseModel()
-        let userName = req.query.userName as string;
-        let firstName = req.query.firstName as string;
-        let lastName = req.query.lastName as string;
+        let username = req.query.username as string;
+        let first_name = req.query.first_name as string;
+        let last_name = req.query.last_name as string;
         let password = req.query.password as string;
 
-        if (!userName || userName.length < 6) {
+        if (!username || username.length < 6) {
             return response.json(baseResponseBuilder.asFailure("valid username required, more than six characters required").build().getJson());
         }
 
-        if (!firstName || firstName.length < 3) {
+        if (!first_name || first_name.length < 3) {
             return response.json(baseResponseBuilder.asFailure("valid first name required, more than three characters").build().getJson());
         }
 
@@ -70,8 +70,8 @@ class AccountController {
             let baseResponseBuilder = new BaseResponseModel()
             new Promise<UserModel>(async (resolve, reject) => {
                 const uid = uuid.v4()
-                let insertQuery = "INSERT INTO Users (first_name, last_name, password, userName, uid)" +
-                    `VALUES ('${firstName}','${lastName}','${await getPasswordHash(password)}','${userName}','${uid}');`
+                let insertQuery = "INSERT INTO Users (first_name, last_name, password, user_name, uid, create_time, status)" +
+                    `VALUES ('${first_name}','${last_name}','${await getPasswordHash(password)}','${username}','${uid}','${getCurrentTimeStamp()}',1);`
 
                 let execResult = await Query(connection, insertQuery).catch(reason => {
                     console.log(getErrorMessage(reason))
@@ -85,7 +85,7 @@ class AccountController {
                     }
                 })
                 if (execResult) {
-                    resolve(new UserModel().set(uid, userName, firstName, lastName, undefined, password))
+                    resolve(new UserModel().set(uid, username, first_name, last_name, undefined, password))
                 }
             }).then(async userModel => {
                 let token = await cacheSession(userModel.uid)
@@ -115,37 +115,37 @@ class AccountController {
             req.statusCode = 401
             return response.json(baseResponseBuilder.asFailure(getErrorMessage(e), 401).getJson())
         }
-        let firstName = req.query.firstName as string;
-        let lastName = req.query.lastName as string;
-        let mobileNumber = req.query.mobileNumber as string;
+        let first_name = req.query.first_name as string;
+        let last_name = req.query.last_name as string;
+        let mobile_number = req.query.mobile_number as string;
         let password = req.query.password as string;
-        let userName = req.query.userName as string;
+        let username = req.query.username as string;
         let updateMap = new Map<string, string>()
 
-        if (firstName && (firstName.length < 6 || firstName.length > 16)) {
+        if (first_name && (first_name.length < 6 || first_name.length > 16)) {
             return response.json(baseResponseBuilder.asFailure("invalid first name, it length could be more than six to 16").getJson())
-        } else if (firstName){
-            updateMap.set("firstName", firstName)
+        } else if (first_name){
+            updateMap.set("first_name", first_name)
         }
-        if (lastName && (lastName.length == 0 || lastName.length > 16)) {
+        if (last_name && (last_name.length == 0 || last_name.length > 16)) {
             return response.json(baseResponseBuilder.asFailure("invalid last name, it length could be more than ").getJson())
-        } else if (lastName) {
-            updateMap.set("lastName", lastName)
+        } else if (last_name) {
+            updateMap.set("last_name", last_name)
         }
-        if (mobileNumber && (mobileNumber.length < 6 || mobileNumber.length > 13)) {
+        if (mobile_number && (mobile_number.length < 6 || mobile_number.length > 13)) {
             return response.json(baseResponseBuilder.asFailure("invalid mobile number").getJson())
-        } else if (mobileNumber) {
-            updateMap.set("mobileNumber", mobileNumber)
+        } else if (mobile_number) {
+            updateMap.set("mobile_number", mobile_number)
         }
-        if (password && (password.length < 6 || mobileNumber.length > 22)) {
+        if (password && (password.length < 6 || mobile_number.length > 22)) {
             return response.json(baseResponseBuilder.asFailure("invalid password, it length could be more than six to 22").getJson())
         } else if (password) {
             updateMap.set("password", password)
         }
-        if (userName && (userName.length < 6 || userName.length > 16)) {
+        if (username && (username.length < 6 || username.length > 16)) {
             return response.json(baseResponseBuilder.asFailure("invalid password, it length could be more than six to 16").getJson())
-        } else if (userName) {
-            updateMap.set("userName", userName)
+        } else if (username) {
+            updateMap.set("username", username)
         }
         if (updateMap.size == 0) {
             return response.json(baseResponseBuilder.asFailure("invalid usage").getJson())
