@@ -2,7 +2,13 @@ import * as redis from 'redis';
 import config from "../config/Configuration";
 
 const redisClient = redis.createClient({
-    password: config.redis.pass
+    username: config.redis.username,
+    password:config.redis.pass,
+    socket:{
+        port : config.redis.port,
+        host : config.redis.host,
+        tls : config.redis.tls
+    }
 });
 
 redisClient.connect().catch(reason => {
@@ -34,6 +40,6 @@ export const putRedisRefreshToken = (userId: string, value: string) => {
     });
 }
 
-export const clearRedisKey = function (key:string) {
+export const clearRedisKey = function (key: string) {
     return redisClient.del(key)
 }

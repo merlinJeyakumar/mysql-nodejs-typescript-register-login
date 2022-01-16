@@ -35,7 +35,13 @@ exports.clearRedisKey = exports.putRedisRefreshToken = exports.putRedisAccessTok
 const redis = __importStar(require("redis"));
 const Configuration_1 = __importDefault(require("../config/Configuration"));
 const redisClient = redis.createClient({
-    password: Configuration_1.default.redis.pass
+    username: Configuration_1.default.redis.username,
+    password: Configuration_1.default.redis.pass,
+    socket: {
+        port: Configuration_1.default.redis.port,
+        host: Configuration_1.default.redis.host,
+        tls: Configuration_1.default.redis.tls
+    }
 });
 redisClient.connect().catch(reason => {
     console.log(`RedisError: ${reason}`);

@@ -28,7 +28,7 @@ class AccountController {
             }
             (0, DatabaseJob_1.Connect)().then((connection) => {
                 new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                    let execResult = yield (0, DatabaseJob_1.Query)(connection, `SELECT * FROM Users WHERE userName = '${username}'`).catch(reason => {
+                    let execResult = yield (0, DatabaseJob_1.Query)(connection, `SELECT * FROM users WHERE user_name = '${username}'`).catch(reason => {
                         reject(reason);
                     });
                     const userModel = new UserModel_1.UserModel().setSqlResult(execResult);
@@ -74,7 +74,7 @@ class AccountController {
                 let baseResponseBuilder = new BaseResponseModel_1.BaseResponseModel();
                 new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     const uid = uuid.v4();
-                    let insertQuery = "INSERT INTO Users (first_name, last_name, password, user_name, uid, create_time, status)" +
+                    let insertQuery = "INSERT INTO users (first_name, last_name, password, user_name, uid, create_time, status)" +
                         `VALUES ('${first_name}','${last_name}','${yield (0, EncryptionUtility_1.getPasswordHash)(password)}','${username}','${uid}','${(0, Utility_1.getCurrentTimeStamp)()}',1);`;
                     let execResult = yield (0, DatabaseJob_1.Query)(connection, insertQuery).catch(reason => {
                         console.log((0, Utility_1.getErrorMessage)(reason));
@@ -169,7 +169,7 @@ class AccountController {
                     }
                     index++;
                 });
-                query = `UPDATE Users SET ${query} WHERE (\`uid\` = '${uid}');`;
+                query = `UPDATE users SET ${query} WHERE (\`uid\` = '${uid}');`;
                 (0, DatabaseJob_1.Query)(connection, query).then((value) => __awaiter(this, void 0, void 0, function* () {
                     let token = yield (0, AuthenticationUtility_1.cacheSession)(uid);
                     baseResponseBuilder.setAuth(new AuthenticationModel_1.AuthenticationModel(token.accessToken, token.refreshToken).getJson());

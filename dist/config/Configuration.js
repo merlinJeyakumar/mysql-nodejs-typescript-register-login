@@ -15,8 +15,11 @@ const MYSQL_PASS = process.env.MYSQL_PASS;
 const SERVER_HOSTNAME = process.env.SERVER_NAME;
 const SERVER_PORT = process.env.PORT;
 const SECRET_ACCESS_KEY = process.env.SECRET_ACCESS_KEY;
-const REDIS_PORT = process.env.REDIS_PORT;
+const REDIS_PORT = parseInt(process.env.REDIS_PORT || '6379');
 const REDIS_PASS = process.env.REDIS_PASS;
+const REDIS_USERNAME = process.env.REDIS_USERNAME;
+const REDIS_HOST = process.env.REDIS_HOST;
+const REDIS_TLS = process.env.REDIS_TLS == "true" ? true : undefined;
 const MYSQL = {
     host: MYSQL_HOST,
     database: MYSQL_DATABASE,
@@ -30,7 +33,10 @@ const SERVER = {
 };
 const REDIS = {
     port: REDIS_PORT,
-    pass: REDIS_PASS
+    username: REDIS_USERNAME,
+    pass: REDIS_PASS,
+    host: REDIS_HOST,
+    tls: REDIS_TLS
 };
 const config = {
     mysql: MYSQL,

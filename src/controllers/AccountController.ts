@@ -22,7 +22,7 @@ class AccountController {
 
         Connect().then((connection) => {
             new Promise<UserModel>(async (resolve, reject) => {
-                let execResult = await Query(connection, `SELECT * FROM Users WHERE userName = '${username}'`).catch(reason => {
+                let execResult = await Query(connection, `SELECT * FROM users WHERE user_name = '${username}'`).catch(reason => {
                     reject(reason)
                 })
                 const userModel = new UserModel().setSqlResult(execResult);
@@ -70,7 +70,7 @@ class AccountController {
             let baseResponseBuilder = new BaseResponseModel()
             new Promise<UserModel>(async (resolve, reject) => {
                 const uid = uuid.v4()
-                let insertQuery = "INSERT INTO Users (first_name, last_name, password, user_name, uid, create_time, status)" +
+                let insertQuery = "INSERT INTO users (first_name, last_name, password, user_name, uid, create_time, status)" +
                     `VALUES ('${first_name}','${last_name}','${await getPasswordHash(password)}','${username}','${uid}','${getCurrentTimeStamp()}',1);`
 
                 let execResult = await Query(connection, insertQuery).catch(reason => {
@@ -161,7 +161,7 @@ class AccountController {
                 }
                 index++;
             })
-            query = `UPDATE Users SET ${query} WHERE (\`uid\` = '${uid}');`
+            query = `UPDATE users SET ${query} WHERE (\`uid\` = '${uid}');`
             Query(connection, query).then(async value => {
                 let token = await cacheSession(uid)
                 baseResponseBuilder.setAuth(new AuthenticationModel(token.accessToken, token.refreshToken).getJson())

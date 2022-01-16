@@ -3,19 +3,19 @@ import {FieldInfo} from "mysql";
 export class UserModel {
     uid: string = "";
     status: number = 0;
-    userName: string = ""
-    firstName: string = "";
-    lastName: string | undefined = "";
-    mobileNumber: string | undefined = "";
+    username: string = ""
+    first_name: string = "";
+    last_name: string | undefined = "";
+    mobile_number: string | undefined = "";
     password: string = "";
 
     public set(uid: string, userName: string, firstName: string, lastName: string | undefined, mobileNumber: string | undefined, password: string) {
         this.uid = uid;
-        this.firstName = firstName;
-        this.lastName = lastName;
+        this.first_name = firstName;
+        this.last_name = lastName;
         this.status = 1;
-        this.mobileNumber = mobileNumber;
-        this.userName = userName;
+        this.mobile_number = mobileNumber;
+        this.username = userName;
         this.password = password;
         return this;
     }
@@ -25,11 +25,11 @@ export class UserModel {
             return undefined
         }
         this.uid = execResult.rows[0].uid;
-        this.firstName = execResult.rows[0].firstName;
-        this.lastName = execResult.rows[0].lastName;
+        this.first_name = execResult.rows[0].firstName;
+        this.last_name = execResult.rows[0].lastName;
         this.status = execResult.rows[0].status;
-        this.mobileNumber = execResult.rows[0].mobileNumber;
-        this.userName = execResult.rows[0].userName;
+        this.mobile_number = execResult.rows[0].mobileNumber;
+        this.username = execResult.rows[0].userName;
         this.password = execResult.rows[0].password
         return this;
     }
@@ -37,10 +37,10 @@ export class UserModel {
     getJson() {
         return {
             uid: this.uid,
-            userName: this.userName,
-            firstName: this.firstName,
-            lastName: this.lastName,
-            mobileNumber: this.mobileNumber,
+            userName: this.username,
+            firstName: this.first_name,
+            lastName: this.last_name,
+            mobileNumber: this.mobile_number,
             status: this.status
         }
     }
