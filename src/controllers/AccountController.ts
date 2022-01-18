@@ -12,17 +12,17 @@ import {compareHashPassword, encryptStringAes, getPasswordHash} from "../support
 class AccountController {
     async login(req: Request, response: Response) {
         let baseResponseBuilder = new BaseResponseModel()
-        let username = req.query.userName as string;
+        let user_name = req.query.user_name as string;
         let password = req.query.password as string;
 
         response.status(200);
-        if (!username || username.length < 6 || !password || password.length < 8) {
+        if (!user_name || user_name.length < 6 || !password || password.length < 8) {
             return response.json(baseResponseBuilder.asFailure("invalid username/password").build().getJson());
         }
 
         Connect().then((connection) => {
             new Promise<UserModel>(async (resolve, reject) => {
-                let execResult = await Query(connection, `SELECT * FROM users WHERE user_name = '${username}'`).catch(reason => {
+                let execResult = await Query(connection, `SELECT * FROM users WHERE user_name = '${user_name}'`).catch(reason => {
                     reject(reason)
                 })
                 const userModel = new UserModel().setSqlResult(execResult);
@@ -48,12 +48,12 @@ class AccountController {
 
     async register(req: Request, response: Response) {
         let baseResponseBuilder = new BaseResponseModel()
-        let username = req.query.username as string;
+        let user_name = req.query.user_name as string;
         let first_name = req.query.first_name as string;
         let last_name = req.query.last_name as string;
         let password = req.query.password as string;
 
-        if (!username || username.length < 6) {
+        if (!user_name || user_name.length < 6) {
             return response.json(baseResponseBuilder.asFailure("valid username required, more than six characters required").build().getJson());
         }
 
@@ -71,7 +71,7 @@ class AccountController {
             new Promise<UserModel>(async (resolve, reject) => {
                 const uid = uuid.v4()
                 let insertQuery = "INSERT INTO users (first_name, last_name, password, user_name, uid, create_time, status)" +
-                    `VALUES ('${first_name}','${last_name}','${await getPasswordHash(password)}','${username}','${uid}','${getCurrentTimeStamp()}',1);`
+                    `VALUES ('${first_name}','${last_name}','${await getPasswordHash(password)}','${user_name}','${uid}','${getCurrentTimeStamp()}',1);`
 
                 let execResult = await Query(connection, insertQuery).catch(reason => {
                     console.log(getErrorMessage(reason))
@@ -85,7 +85,7 @@ class AccountController {
                     }
                 })
                 if (execResult) {
-                    resolve(new UserModel().set(uid, username, first_name, last_name, undefined, password))
+                    resolve(new UserModel().set(uid, user_name, first_name, last_name, undefined, password))
                 }
             }).then(async userModel => {
                 let token = await cacheSession(userModel.uid)
@@ -119,7 +119,7 @@ class AccountController {
         let last_name = req.query.last_name as string;
         let mobile_number = req.query.mobile_number as string;
         let password = req.query.password as string;
-        let username = req.query.username as string;
+        let username = req.query.user_name as string;
         let updateMap = new Map<string, string>()
 
         if (first_name && (first_name.length < 6 || first_name.length > 16)) {

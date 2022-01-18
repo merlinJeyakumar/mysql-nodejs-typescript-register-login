@@ -20,15 +20,15 @@ class AccountController {
     login(req, response) {
         return __awaiter(this, void 0, void 0, function* () {
             let baseResponseBuilder = new BaseResponseModel_1.BaseResponseModel();
-            let username = req.query.userName;
+            let user_name = req.query.user_name;
             let password = req.query.password;
             response.status(200);
-            if (!username || username.length < 6 || !password || password.length < 8) {
+            if (!user_name || user_name.length < 6 || !password || password.length < 8) {
                 return response.json(baseResponseBuilder.asFailure("invalid username/password").build().getJson());
             }
             (0, DatabaseJob_1.Connect)().then((connection) => {
                 new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                    let execResult = yield (0, DatabaseJob_1.Query)(connection, `SELECT * FROM users WHERE user_name = '${username}'`).catch(reason => {
+                    let execResult = yield (0, DatabaseJob_1.Query)(connection, `SELECT * FROM users WHERE user_name = '${user_name}'`).catch(reason => {
                         reject(reason);
                     });
                     const userModel = new UserModel_1.UserModel().setSqlResult(execResult);
@@ -56,11 +56,11 @@ class AccountController {
     register(req, response) {
         return __awaiter(this, void 0, void 0, function* () {
             let baseResponseBuilder = new BaseResponseModel_1.BaseResponseModel();
-            let username = req.query.username;
+            let user_name = req.query.user_name;
             let first_name = req.query.first_name;
             let last_name = req.query.last_name;
             let password = req.query.password;
-            if (!username || username.length < 6) {
+            if (!user_name || user_name.length < 6) {
                 return response.json(baseResponseBuilder.asFailure("valid username required, more than six characters required").build().getJson());
             }
             if (!first_name || first_name.length < 3) {
@@ -75,7 +75,7 @@ class AccountController {
                 new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
                     const uid = uuid.v4();
                     let insertQuery = "INSERT INTO users (first_name, last_name, password, user_name, uid, create_time, status)" +
-                        `VALUES ('${first_name}','${last_name}','${yield (0, EncryptionUtility_1.getPasswordHash)(password)}','${username}','${uid}','${(0, Utility_1.getCurrentTimeStamp)()}',1);`;
+                        `VALUES ('${first_name}','${last_name}','${yield (0, EncryptionUtility_1.getPasswordHash)(password)}','${user_name}','${uid}','${(0, Utility_1.getCurrentTimeStamp)()}',1);`;
                     let execResult = yield (0, DatabaseJob_1.Query)(connection, insertQuery).catch(reason => {
                         console.log((0, Utility_1.getErrorMessage)(reason));
                         switch (reason.code) {
@@ -88,7 +88,7 @@ class AccountController {
                         }
                     });
                     if (execResult) {
-                        resolve(new UserModel_1.UserModel().set(uid, username, first_name, last_name, undefined, password));
+                        resolve(new UserModel_1.UserModel().set(uid, user_name, first_name, last_name, undefined, password));
                     }
                 })).then((userModel) => __awaiter(this, void 0, void 0, function* () {
                     let token = yield (0, AuthenticationUtility_1.cacheSession)(userModel.uid);
@@ -124,7 +124,7 @@ class AccountController {
             let last_name = req.query.last_name;
             let mobile_number = req.query.mobile_number;
             let password = req.query.password;
-            let username = req.query.username;
+            let username = req.query.user_name;
             let updateMap = new Map();
             if (first_name && (first_name.length < 6 || first_name.length > 16)) {
                 return response.json(baseResponseBuilder.asFailure("invalid first name, it length could be more than six to 16").getJson());
