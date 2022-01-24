@@ -16,6 +16,11 @@ class MasterRouter {
         return this._router;
     }
     _configure() {
+        this._router.all('/', (req, res) => {
+            res.writeHead(200, { "Content-Type": "text/html" });
+            res.write("<B>HelloWorld</B>");
+            res.end();
+        });
         this._router.use('/account', this._accountRouter);
         this._router.use('/post', this._postRouter);
     }

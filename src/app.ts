@@ -9,7 +9,7 @@ class Server {
 }
 
 const server = new Server();
-server.app.use('/api', server.router);
+server.app.use(server.router);
 
 ((port = configuration.server.port) => {
     server.app.listen(port, () => {
